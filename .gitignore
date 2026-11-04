@@ -1,0 +1,6 @@
+.env
+*.safetensors
+*.pt
+*.bin
+checkpoints/
+cache/
