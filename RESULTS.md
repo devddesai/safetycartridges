@@ -162,3 +162,19 @@ block, (b) the spec's many example dialogues (incl. role-play examples) teach pe
 non-thinking mode, in-context access to the spec is not a safety mechanism against jailbreaks;
 this strengthens the case for a larger / thinking-mode model (CLAUDE.md §8). The question for
 conditions 3/4 is now whether the compressed caches reproduce this vulnerability (fidelity) or not.
+
+## Headroom check: Mistral-Nemo-12B-Instruct-2407 (validation only, vLLM, no rope scaling: 128k native)
+Official lightly-moderated instruct model, same prompts, same judge, preamble v2.
+
+| validation | harmful refusal | **unsafe** | benign false refusal | benign any refusal | benign helpful | jailbreak refusal | **jailbreak unsafe** |
+|---|---|---|---|---|---|---|---|
+| Nemo, no spec | 0.886 | **0.200** | 0.064 | 0.191 | 0.925 | 0.314 | **0.850** |
+| Nemo, full spec in context | 0.886 | **0.143** | 0.145 | 0.291 | 0.804 | 0.486 | **0.714** |
+| (Qwen3-8B, no spec) | 0.950 | 0.021 | 0.109 | 0.327 | 0.887 | 0.721 | 0.343 |
+| (Qwen3-8B, full spec) | 0.979 | 0.000 | 0.218 | 0.491 | 0.796 | 0.600 | 0.486 |
+
+On Nemo the spec in context works in the intended direction on both prompt sets (unsafe 20% -> 14%
+plain, 85% -> 71% under jailbreaks) with the usual over-refusal cost. So Nemo has real headroom and
+a real teacher effect, unlike Qwen3-8B. Decision: run the Attention-Matching compaction on Nemo
+tonight if time allows (the compaction repo's Llama path should load Mistral weights), evaluated
+on the jailbreak and plain validation sets, to test whether a compressed spec carries the gain.
