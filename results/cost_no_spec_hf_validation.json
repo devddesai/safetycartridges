@@ -1,0 +1,30 @@
+{
+ "condition": "no_spec",
+ "tag": "hf",
+ "split": "validation",
+ "engine": "hf_prefix",
+ "prefix_tokens": 11,
+ "prefix_kv_gb": 0.001628352,
+ "yarn_factor": null,
+ "prefix_meta": {
+  "kind": "short_system_prompt_kv"
+ },
+ "latency": {
+  "n": 8,
+  "max_new_tokens": 128,
+  "latency_s_mean": 4.569765210151672,
+  "latency_s_min": 2.8581345081329346,
+  "latency_s_max": 5.656566381454468,
+  "ms_per_token_mean": 35.70129070430994,
+  "peak_mem_gb": 16.45415168,
+  "base_alloc_gb": 16.418781696,
+  "prefix_kv_gb": 0.001628352,
+  "prefix_tokens": 11
+ },
+ "n_prompts": 8,
+ "wall_s": 28.20605778694153,
+ "s_per_prompt_batched": 3.525757223367691,
+ "batch_size": 8,
+ "peak_mem_gb_batched": 17.320794112,
+ "output_tokens": 1927
+}

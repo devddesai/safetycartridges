@@ -239,11 +239,14 @@ Full per-file table: `results/summary.md`; costs: `results/cost_table.md`.
 ### Cost (HF engine, same code path for every condition; batch 1, 128 new tokens)
 | condition | prefix tokens | prefix KV | ms/token | peak GB | one-time cost |
 |---|---|---|---|---|---|
-| C2 full spec | 55,749 | 8.22 GB | (measured in queue 6) | | prefill 11 s (then cached) |
+| C1 no spec | 11 | ~0 | 35.7 | 16.5 | 0 |
+| C2 full spec | 55,749 | 8.22 GB | **129.9** | 34.2 | prefill 11 s (then cached) |
 | C4 AM 2k | 2,223 | 0.33 GB | 38.3 | 17.1 | 2.1 GPU-min |
 | C4 AM 1k | 1,199 | 0.18 GB | 37.6 | 16.8 | 1.7 GPU-min |
 | C4 AM 4k | 4,271 | 0.63 GB | 34.5 | 17.8 | 3.0 GPU-min |
 | C3 cartridge 1k | 1,024 | 0.15 GB | 35.0 | 16.8 | 9.1 GPU-min (incl. 4 min teacher targets) |
+Single-stream decoding with the full 55.7k-token spec is 3.6x slower per token than with a compressed
+prefix (130 vs 35-38 ms/token on the same HF/sdpa engine) and needs 2x the memory (34 vs 17 GB).
 vLLM throughput for reference: C1 1,600 output tok/s, C2 250-500 tok/s with the shared 55.7k prefix.
 
 ### Summary of findings
