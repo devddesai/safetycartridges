@@ -109,3 +109,36 @@ Reading: the spec in context removes the few unsafe completions the base model s
 balanced spec-compliance is marginally lower. For Qwen3-8B the "teacher" is therefore a
 safer-but-more-cautious policy, not a strictly better one. Conditions 3 and 4 are judged on how
 faithfully they reproduce condition 2, not on beating condition 1.
+
+## Milestone 6 — condition 4, Attention Matching (in progress; validation sweep done for 1k/2k)
+Setup: full-spec KV cache (55,749 prefix tokens incl. template + preamble, YaRN x4) compacted
+with the Attention-Matching repo's `AM-HighestAttnKeys` (rms scores, 2 NNLS iters, lsq values),
+compacting only the 55,574 spec tokens (template/preamble tokens kept verbatim). Queries (train
+split only): 16k spec-token queries ("self") + queries from 96 condition-2 TRAIN conversations
+(prompt + response attending to the full cache), 50k queries per KV head. Uniform per-head budget
+(no precomputed head budgets exist for Qwen3-8B). One-time cost per size: prefill 11 s + queries
+33 s + compaction 61-83 s = **~2 GPU-minutes**, peak 88 GB.
+
+| prefix (validation, n=250) | tokens | KV size | harmful refusal | harmful unsafe | benign false refusal | benign any refusal | benign helpful | agree w/ C2 (refused?) |
+|---|---|---|---|---|---|---|---|---|
+| C1 no spec | 11 | ~0 | 0.950 | 0.021 | 0.109 | 0.327 | 0.887 | 0.848 |
+| C2 full spec | 55,749 | 8.22 GB | 0.979 | 0.000 | 0.218 | 0.491 | 0.796 | (self-agreement across two samples ~0.86) |
+| C4 AM 2048 (27x) | 2,223 | 0.33 GB | 0.979 | 0.000 | 0.255 | 0.445 | 0.789 | 0.900 |
+| C4 AM 1024 (54x) | 1,199 | 0.18 GB | 0.986 | 0.000 | 0.300 | 0.473 | 0.769 | 0.916 |
+| C4 AM 4096 (14x) | 4,271 | 0.63 GB | (running) | | | | | |
+
+Both compacted caches reproduce the spec-in-context behaviour at the sampling-noise ceiling
+(per-prompt refuse/comply agreement with C2 is as high as C2's agreement with a second sample of
+itself). Latency (batch 1, 128 new tokens, HF/sdpa): 38 ms/token with the 2k prefix vs 35 ms/token
+with 4k; peak memory 17.1 GB vs the model's 16.4 GB.
+**Choice for test: AM-2048** (pre-registered middle size; closest to C2 on benign refusals).
+
+### Re-prioritisation (18:20)
+Qwen3-8B is 0-2% unsafe on plain harmful prompts with or without the spec, so plain-prompt
+safety numbers carry no learning signal. Remaining GPU time is re-ordered to experiments that can
+produce a signal: (1) jailbreak-wrapped harmful prompts (AIM, refusal-suppression, evil-confidant
+templates on the val/test harmful prompts) for all conditions; (2) a headroom check on a lightly
+safety-tuned model, Mistral-Nemo-12B-Instruct (128k native context, Llama-style architecture),
+no-spec vs spec-in-context on validation; (3) the cartridge (condition 3); (4) plain test evals for
+the chosen C3/C4 prefixes. Dropped: test evals of AM-1024/4096 and the thinking-mode ablation
+(only if time remains).

@@ -56,8 +56,9 @@ def main():
 
     if args.model and "qwen3" not in args.model.lower():
         yarn = None  # e.g. Mistral-Nemo: 128k native context, no rope scaling needed
+    other_model = bool(args.model and "qwen3" not in args.model.lower())
     llm = build_llm(yarn_factor=yarn, gpu_memory_utilization=args.gpu_mem, model=args.model,
-                    max_model_len=None if yarn else 65536)
+                    max_model_len=65536 if other_model else None)
     torch.cuda.reset_peak_memory_stats()
     outs, wall = chat_generate(llm, system_prompt, [r["prompt"] for r in todo])
     recs = read_jsonl(out_path)
