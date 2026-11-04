@@ -21,18 +21,27 @@ def main():
     ap.add_argument("--split", required=True, choices=["train", "validation", "test"])
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--tag", default="")
+    ap.add_argument("--prompt-set", default="main", choices=["main", "jailbreak"])
     ap.add_argument("--gpu-mem", type=float, default=0.85)
     ap.add_argument("--preamble", default=None, help="spec preamble variant (see sc.spec.PREAMBLES)")
+    ap.add_argument("--model", default=None, help="other HF model for a headroom check (no YaRN; tag added)")
+    ap.add_argument("--model-tag", default=None)
     ap.add_argument("--thinking", action="store_true", help="ablation: Qwen3 thinking mode (max 4096 new tokens, thinking sampling)")
     args = ap.parse_args()
 
     name = CONDITIONS[args.condition]
+    if args.model:
+        from sc import rollouts as R
+        R.MODEL_NAME = args.model
+        args.tag = (args.tag + "_" if args.tag else "") + (args.model_tag or args.model.split("/")[-1].lower())
+    if args.prompt_set != "main":
+        args.tag = (args.tag + "_" if args.tag else "") + "jb"
     if args.thinking:
         from sc import rollouts as R
         R.SAMPLING.update({"enable_thinking": True, "max_new_tokens": 4096, "temperature": 0.6, "top_p": 0.95, "top_k": 20})
         args.tag = (args.tag + "_" if args.tag else "") + "thinking"
     out_path = rollout_path(name, args.split, args.tag)
-    rows = load_prompts(args.split, limit=args.limit)
+    rows = load_prompts(args.split, limit=args.limit, prompt_set=args.prompt_set)
     done = {r["prompt_id"] for r in read_jsonl(out_path)}
     todo = [r for r in rows if r["id"] not in done]
     print(f"{name}/{args.split}: {len(rows)} prompts, {len(done)} already done, {len(todo)} to generate")
@@ -45,7 +54,10 @@ def main():
     else:
         system_prompt, spec_hash, yarn = NO_SPEC_SYSTEM_PROMPT, None, None
 
-    llm = build_llm(yarn_factor=yarn, gpu_memory_utilization=args.gpu_mem)
+    if args.model and "qwen3" not in args.model.lower():
+        yarn = None  # e.g. Mistral-Nemo: 128k native context, no rope scaling needed
+    llm = build_llm(yarn_factor=yarn, gpu_memory_utilization=args.gpu_mem, model=args.model,
+                    max_model_len=None if yarn else 65536)
     torch.cuda.reset_peak_memory_stats()
     outs, wall = chat_generate(llm, system_prompt, [r["prompt"] for r in todo])
     recs = read_jsonl(out_path)

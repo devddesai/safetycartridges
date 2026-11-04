@@ -127,11 +127,17 @@ def make_splits(rows: list[dict], seed: int, fracs=(0.6, 0.2, 0.2)) -> dict:
     return splits
 
 
-def load_prompts(split: str | None = None, limit: int | None = None, seed: int = 0) -> list[dict]:
-    rows = [json.loads(l) for l in PROMPTS_JSONL.read_text().splitlines()]
+PROMPT_SETS = {"main": PROMPTS_JSONL, "jailbreak": ROOT / "data" / "prompts_jailbreak.jsonl"}
+
+
+def load_prompts(split: str | None = None, limit: int | None = None, seed: int = 0, prompt_set: str = "main") -> list[dict]:
+    rows = [json.loads(l) for l in PROMPT_SETS[prompt_set].read_text().splitlines()]
     if split is not None:
-        ids = set(json.loads(SPLITS_JSON.read_text())["splits"][split])
-        rows = [r for r in rows if r["id"] in ids]
+        if prompt_set == "main":
+            ids = set(json.loads(SPLITS_JSON.read_text())["splits"][split])
+            rows = [r for r in rows if r["id"] in ids]
+        else:
+            rows = [r for r in rows if r["split"] == split]
     if limit is not None and limit < len(rows):
         # Balanced deterministic subset: interleave harmful/benign.
         rng = random.Random(seed)

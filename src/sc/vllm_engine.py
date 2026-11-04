@@ -9,10 +9,11 @@ NATIVE_MAX_POS = 32768
 
 
 def build_llm(yarn_factor: float | None = None, gpu_memory_utilization: float = 0.85,
-              max_model_len: int | None = None, seed: int = 0):
+              max_model_len: int | None = None, seed: int = 0, model: str | None = None):
     os.environ.setdefault("VLLM_WORKER_MULTIPROC_METHOD", "spawn")
     from vllm import LLM
-    kwargs = dict(model=MODEL_NAME, tokenizer=MODEL_NAME, dtype="bfloat16", seed=seed,
+    model = model or MODEL_NAME
+    kwargs = dict(model=model, tokenizer=model, dtype="bfloat16", seed=seed,
                   gpu_memory_utilization=gpu_memory_utilization, enable_prefix_caching=True)
     if yarn_factor:
         kwargs["max_model_len"] = max_model_len or int(NATIVE_MAX_POS * yarn_factor)

@@ -24,14 +24,17 @@ def main():
     ap.add_argument("--prefix", default=None)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--tag", default="")
+    ap.add_argument("--prompt-set", default="main", choices=["main", "jailbreak"])
     ap.add_argument("--batch-size", type=int, default=None)
     ap.add_argument("--latency-n", type=int, default=8, help="prompts for batch-1 latency measurement")
     args = ap.parse_args()
 
     name = CONDITIONS[args.condition]
+    if args.prompt_set != "main":
+        args.tag = (args.tag + "_" if args.tag else "") + "jb"
     tag = args.tag or (Path(args.prefix).stem if args.prefix else "hf")
     out_path = rollout_path(name, args.split, tag)
-    rows = load_prompts(args.split, limit=args.limit)
+    rows = load_prompts(args.split, limit=args.limit, prompt_set=args.prompt_set)
     done = {r["prompt_id"] for r in read_jsonl(out_path)}
     todo = [r for r in rows if r["id"] not in done]
     print(f"{name}/{args.split}/{tag}: {len(rows)} prompts, {len(done)} done, {len(todo)} to generate", flush=True)
