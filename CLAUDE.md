@@ -177,3 +177,7 @@ Conditions today: 1 (no spec), 2 (full spec in context), 3 (cartridge),
   or "uncensored" uploads (unclear provenance), and do not use models fine-tuned on harmful data.
   Also evaluate on jailbreak-wrapped prompts (data/prompts_jailbreak.jsonl), where even
   safety-tuned small models fail and the spec can matter.
+- Thinking-mode result (2026-11-04): in Qwen3 thinking mode the spec in context DOES reduce
+  jailbreak unsafe rate (0.46 -> 0.29 on validation) whereas in non-thinking mode it increases it
+  (0.34 -> 0.49). Next phases should run spec conditions (and the compressed conditions 3/4) in
+  thinking mode; the prefix/cartridge is unchanged, only generation differs.

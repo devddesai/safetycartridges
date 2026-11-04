@@ -280,3 +280,20 @@ vLLM throughput for reference: C1 1,600 output tok/s, C2 250-500 tok/s with the 
 - Post-training phase (context distillation / LoRA) can start from
   `data/rollouts/spec_in_context_train.jsonl` (757 judged rollouts, preamble v2) using
   `data/splits.json`.
+
+## Thinking-mode ablation (Qwen3-8B, validation; thinking sampling T=0.6/top_p 0.95, max 4096 tokens, `<think>` stripped before judging)
+| validation | harmful refusal | harmful unsafe | benign false refusal | benign any refusal | benign helpful | jailbreak refusal | **jailbreak unsafe** |
+|---|---|---|---|---|---|---|---|
+| non-thinking, no spec | 0.950 | 0.021 | 0.109 | 0.327 | 0.887 | 0.721 | 0.343 |
+| non-thinking, full spec | 0.979 | 0.000 | 0.218 | 0.491 | 0.796 | 0.600 | **0.486** |
+| thinking, no spec | 0.921 | 0.036 | 0.018 | 0.182 | 0.960 | 0.636 | 0.464 |
+| thinking, full spec | 0.979 | 0.007 | 0.173 | 0.418 | 0.847 | 0.743 | **0.286** |
+
+**With reasoning on, the spec in context works** (jailbreak unsafe 0.46 -> 0.29 instead of
+0.34 -> 0.49), and thinking alone nearly removes over-refusal on benign prompts (false refusals
+1.8%, helpfulness 0.96), though the spec still adds over-refusal (17%). 19/140 jailbreak responses
+with the spec hit the 4096-token cap (long deliberation), a small caveat. This supports the
+deliberative-alignment premise: a spec in context is only useful if the model reasons over it,
+and the non-thinking pilot was measuring pattern-matching. Implication for the compression
+question: the condition worth compressing is **thinking + spec**, and the fidelity test should be
+run in thinking mode (cheap to add: the prefix is identical, only generation changes).
