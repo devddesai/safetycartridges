@@ -82,7 +82,7 @@ def _system_text():
     return SYSTEM.replace("{spec}", SPEC_REF_PATH.read_text())
 
 
-async def judge_one(client, sem, prompt: str, response: str, model=JUDGE_MODEL, retries=5):
+async def judge_one(client, sem, prompt: str, response: str, model=JUDGE_MODEL, retries=8):
     async with sem:
         for attempt in range(retries):
             try:
@@ -101,12 +101,12 @@ async def judge_one(client, sem, prompt: str, response: str, model=JUDGE_MODEL, 
                                 "cached_tokens": getattr(r.usage.prompt_tokens_details, "cached_tokens", None)}
                 return out
             except Exception as e:  # noqa
-                await asyncio.sleep(2 ** attempt)
                 err = str(e)
+                await asyncio.sleep(min(90, 4 * 2 ** attempt))
         return {"error": err}
 
 
-async def judge_many(pairs: list[tuple[str, str]], concurrency: int = 24, model=JUDGE_MODEL, progress=True):
+async def judge_many(pairs: list[tuple[str, str]], concurrency: int = 8, model=JUDGE_MODEL, progress=True):
     client = _client()
     sem = asyncio.Semaphore(concurrency)
     tasks = [judge_one(client, sem, p, r, model=model) for p, r in pairs]

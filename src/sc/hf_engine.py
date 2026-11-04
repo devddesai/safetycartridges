@@ -25,9 +25,18 @@ NATIVE_MAX_POS = 32768
 
 
 def load_model(yarn_factor: float | None = None, device: str = "cuda"):
-    from evaluation.utils import load_model_and_tokenizer
-    max_len = int(NATIVE_MAX_POS * yarn_factor) if yarn_factor else None
-    model, tok = load_model_and_tokenizer(MODEL_NAME, device=device, max_model_len=max_len)
+    """Same rope scaling as the vLLM condition-2 run: yarn, factor 4, original 32768 (Qwen3 docs)."""
+    from transformers import AutoTokenizer
+    from models.qwen3 import Qwen3ForCausalLM
+    tok = AutoTokenizer.from_pretrained(MODEL_NAME)
+    kwargs = {"device_map": device, "dtype": torch.bfloat16, "attn_implementation": "sdpa"}
+    if yarn_factor:
+        kwargs["rope_scaling"] = {"rope_type": "yarn", "factor": float(yarn_factor),
+                                  "original_max_position_embeddings": NATIVE_MAX_POS}
+        kwargs["max_position_embeddings"] = int(NATIVE_MAX_POS * yarn_factor)
+    model = Qwen3ForCausalLM.from_pretrained(MODEL_NAME, **kwargs)
+    model.eval()
+    print(f"loaded {MODEL_NAME} rope_scaling={kwargs.get('rope_scaling')}", flush=True)
     if tok.pad_token_id is None:
         tok.pad_token_id = tok.eos_token_id
     return model, tok

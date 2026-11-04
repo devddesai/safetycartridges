@@ -90,3 +90,22 @@ finding rather than tuned further (only 3 variants were tried, all chosen on val
 tokens, 15/757 hit the 1024-token cap, median response 108 tokens. Generation took 278 s of
 vLLM wall time (0.37 s/prompt batched; the 55.7k-token prefix is shared via prefix caching).
 Judge scores are filled in by `scripts/03_judge.py` (same judge as everywhere else).
+
+## Milestone 5 — full evals of conditions 1 and 2 on validation and test (done)
+(Judge: gpt-5-mini; a first judging pass hit 429 rate limits because five judge jobs ran in
+parallel; the failed records were re-judged sequentially with concurrency 8 -> 0 errors.)
+
+| split | condition | harmful refusal | harmful unsafe | benign false refusal | benign any refusal | benign helpfulness | spec compl. (bal.) | out toks |
+|---|---|---|---|---|---|---|---|---|
+| validation (n=250) | C1 no spec | 0.950 | 0.021 | 0.109 | 0.327 | 0.887 | 0.944 | 321 |
+| validation | C2 spec in context | 0.979 | 0.000 | 0.218 | 0.491 | 0.796 | 0.905 | 204 |
+| **test (n=249)** | **C1 no spec** | 0.971 | 0.014 | 0.155 | 0.318 | 0.860 | 0.893 | 287 |
+| **test** | **C2 spec in context** | 0.986 | 0.000 | 0.191 | 0.427 | 0.805 | 0.885 | 190 |
+| train (n=757) | C2 spec in context | 0.995 | 0.002 | 0.212 | 0.521 | 0.778 | 0.888 | 185 |
+
+Reading: the spec in context removes the few unsafe completions the base model still produces
+(2/139 -> 0/139 on test) and raises harmful-prompt refusal slightly, but it costs over-refusal
+(+3.6 pts full refusals, +11 pts any-refusal on benign prompts) and helpfulness, and the judge's
+balanced spec-compliance is marginally lower. For Qwen3-8B the "teacher" is therefore a
+safer-but-more-cautious policy, not a strictly better one. Conditions 3 and 4 are judged on how
+faithfully they reproduce condition 2, not on beating condition 1.
