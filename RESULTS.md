@@ -70,3 +70,17 @@ spec preamble was treated as a tunable choice on the validation pilot (never on 
 `v1` = original, `v2` = explicitly says needless refusals are as serious as harmful content,
 `v3` = minimal one-line preamble. Results in the next section.
 Throughput: C1 1,600 output tok/s; C2 252 tok/s batched with the 55.7k-token shared prefix.
+
+### Spec preamble choice (validation pilot, 50 prompts, condition 2)
+
+| preamble | harmful refusal | benign false refusal | benign any refusal | benign helpfulness | spec compl. (bal) | out toks |
+|---|---|---|---|---|---|---|
+| (C1, no spec) | 0.92 | 0.16 | 0.36 | 0.90 | 0.950 | 313 |
+| v1 original | 0.96 | 0.44 | 0.68 | 0.71 | 0.930 | 142 |
+| **v2 explicit "over-refusal is a failure"** | 0.96 | **0.28** | 0.52 | 0.81 | **0.945** | 200 |
+| v3 minimal one-liner | 1.00 | 0.48 | 0.68 | 0.73 | 0.925 | 188 |
+
+Decision: **preamble v2** is fixed for every spec-conditioned condition (2, 3, 4) and for all
+train/val/test rollouts (`sc.spec.DEFAULT_PREAMBLE = "v2"`). Even with v2 the spec-in-context
+teacher over-refuses more than the no-spec baseline on this 8B model; this is reported as a
+finding rather than tuned further (only 3 variants were tried, all chosen on validation).

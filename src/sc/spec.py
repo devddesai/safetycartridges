@@ -37,7 +37,7 @@ PREAMBLES = {
     "v3": "The following is the OpenAI Model Spec, a specification of how you should behave. "
           "Follow it.\n\n=== BEGIN MODEL SPEC ===\n",
 }
-DEFAULT_PREAMBLE = "v1"
+DEFAULT_PREAMBLE = "v2"
 
 # Section anchors that make up the "core safety sections" fallback (see CLAUDE.md).
 CORE_SAFETY_ANCHORS = [

@@ -83,8 +83,11 @@ def main():
     target_size = (seq_len - len(indices)) + args.target_tokens
     torch.cuda.synchronize(); torch.cuda.reset_peak_memory_stats()
     t0 = time.time()
+    from compaction.query_generation.config import QueryConfig, QueryMethodConfig, RandomVectorConfig
+    qcfg = QueryConfig(method_configs=[QueryMethodConfig("random_vectors", 1.0, RandomVectorConfig())],
+                       max_query_vectors_per_kv_head=args.max_queries_per_kv_head, eval_queries_per_kv_head=1000)
     compacted, stats = method.compact_kv_cache(past_key_values=kv_tuple, target_size=target_size, indices=indices,
-                                               query_config=None, model=model, tokenizer=tok,
+                                               query_config=qcfg, model=model, tokenizer=tok,
                                                formatted_context=prefix_text, compute_stats=False)
     torch.cuda.synchronize()
     t_compact = time.time() - t0
