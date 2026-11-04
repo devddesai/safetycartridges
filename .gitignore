@@ -4,3 +4,10 @@
 *.bin
 checkpoints/
 cache/
+third_party/
+logs/
+cache/
+*.pth
+__pycache__/
+*.pyc
+.hf_home/

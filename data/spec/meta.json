@@ -1,0 +1,15 @@
+{
+  "source": "https://github.com/openai/model_spec/blob/main/model_spec.md",
+  "source_commit": "7ab1b124b10b56389641761014823346f1063a6a",
+  "spec_version_header": "## v2026.10.29 ([Blog](https://openai.com/index/updated-model-spec), [Release Notes](https://help.openai.com/en/articles/9624314-model-release-notes), [HTML](https://model-spec.openai.com/2026-10-29.html))",
+  "sha256_markdown": "21abb0212ca81934589ac07a4ff424033afce73757de94b1ebf60f45bb1605f6",
+  "sha256_plain_text": "00d71be895dee0faca3890a4ac4abb9e61c4c8d6d1f5828fecbc554d16a29c4f",
+  "sha256_core_sections": "3d1ede5f0a27ff71aba729dc0dc6b4074f2b28f0bd3015dc5c60cc8d1f3ce45b",
+  "tokens_markdown_qwen3": 58406,
+  "tokens_plain_qwen3": 55574,
+  "tokens_core_sections_qwen3": 19140,
+  "tokens_full_system_prompt_qwen3": 55652,
+  "chars_plain": 269696,
+  "tokenizer": "Qwen/Qwen3-8B",
+  "needs_yarn": true
+}
