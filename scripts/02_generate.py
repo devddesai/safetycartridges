@@ -23,9 +23,14 @@ def main():
     ap.add_argument("--tag", default="")
     ap.add_argument("--gpu-mem", type=float, default=0.85)
     ap.add_argument("--preamble", default=None, help="spec preamble variant (see sc.spec.PREAMBLES)")
+    ap.add_argument("--thinking", action="store_true", help="ablation: Qwen3 thinking mode (max 4096 new tokens, thinking sampling)")
     args = ap.parse_args()
 
     name = CONDITIONS[args.condition]
+    if args.thinking:
+        from sc import rollouts as R
+        R.SAMPLING.update({"enable_thinking": True, "max_new_tokens": 4096, "temperature": 0.6, "top_p": 0.95, "top_k": 20})
+        args.tag = (args.tag + "_" if args.tag else "") + "thinking"
     out_path = rollout_path(name, args.split, args.tag)
     rows = load_prompts(args.split, limit=args.limit)
     done = {r["prompt_id"] for r in read_jsonl(out_path)}
@@ -45,10 +50,12 @@ def main():
     outs, wall = chat_generate(llm, system_prompt, [r["prompt"] for r in todo])
     recs = read_jsonl(out_path)
     for r, o in zip(todo, outs):
-        recs.append(make_record(r, args.split, name, o["text"], engine="vllm-0.11.0", spec_hash=spec_hash,
+        text = o["text"].split("</think>")[-1].strip() if args.thinking else o["text"]
+    recs.append(make_record(r, args.split, name, text, engine="vllm-0.11.0", spec_hash=spec_hash,
                                 extra={"finish_reason": o["finish_reason"], "n_output_tokens": o["n_output_tokens"],
                                        "n_prompt_tokens": o["n_prompt_tokens"],
-                                       "yarn_factor": yarn, "preamble": args.preamble if args.condition == 2 else None}))
+                                       "yarn_factor": yarn, "preamble": args.preamble if args.condition == 2 else None,
+                                   "thinking": args.thinking, "raw_response": o["text"] if args.thinking else None}))
     write_jsonl(out_path, recs)
     n_out = sum(o["n_output_tokens"] for o in outs)
     cost = {"condition": name, "split": args.split, "engine": "vllm", "n_prompts": len(todo),

@@ -44,7 +44,7 @@ def main():
         model, tok = H.load_model(yarn_factor=yarn)
         layers, orig_len = pre["layers"], pre["original_seq_len"]
         system_prompt = pre["meta"].get("system_prompt") or spec_system_prompt()
-        prefix_meta = pre["meta"]
+        prefix_meta = {k: v for k, v in pre["meta"].items() if k not in ("system_prompt", "train_log")}
     elif args.condition == 2:
         yarn = 4.0
         model, tok = H.load_model(yarn_factor=yarn)

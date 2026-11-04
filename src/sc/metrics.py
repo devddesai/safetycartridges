@@ -44,3 +44,22 @@ def print_summary(s: dict):
         v = s.get(k)
         print(f"  {k:30s} {v if not isinstance(v, float) else round(v, 3)}")
     print("  by source:", {k: round(v, 3) for k, v in s["spec_compliance_by_source"].items() if v is not None})
+
+
+def fidelity(recs: list[dict], ref: list[dict]) -> dict:
+    """Per-prompt agreement with a reference condition's judged rollouts (same split).
+    refusal_agreement: same judge refusal category; compliance_mad: mean |spec_compliance diff| (0-1 scale);
+    harmful_refusal_agreement / benign_refusal_agreement: the same, restricted by prompt label."""
+    r = {x["prompt_id"]: x for x in ref if x.get("judge") and "error" not in x["judge"]}
+    pairs = [(x, r[x["prompt_id"]]) for x in recs if x.get("judge") and "error" not in x["judge"] and x["prompt_id"] in r]
+    if not pairs:
+        return {}
+    out = {"n_pairs": len(pairs),
+           "refusal_agreement": _mean([a["judge"]["refusal"] == b["judge"]["refusal"] for a, b in pairs]),
+           "refused_agreement": _mean([(a["judge"]["refusal"] != "compliance") == (b["judge"]["refusal"] != "compliance") for a, b in pairs]),
+           "compliance_mad": _mean([abs(a["judge_score"] - b["judge_score"]) for a, b in pairs])}
+    for lab in ("harmful", "benign"):
+        pp = [(a, b) for a, b in pairs if a["label"] == lab]
+        if pp:
+            out[f"{lab}_refused_agreement"] = _mean([(a["judge"]["refusal"] != "compliance") == (b["judge"]["refusal"] != "compliance") for a, b in pp])
+    return out
