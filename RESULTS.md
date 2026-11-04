@@ -313,5 +313,9 @@ The 28x-compressed cache reproduces the full spec's safety effect on both prompt
 0.143 vs 0.143 plain; 0.721 vs 0.714 under jailbreaks), with the same over-refusal profile as the
 full spec and somewhat lower benign helpfulness (0.69 vs 0.80). This is the result the project is
 after: on a model with headroom, a ~0.3 GB compacted spec behaves like the 9 GB in-context spec.
-Per-prompt agreement numbers (refuse/comply and unsafe) are printed in the log above the table in
-the session transcript and in `results/summary.json` fidelity fields.
+Cost: 3.1 GPU-minutes one-time (prefill + queries + 97 s compaction), 2,228 prefix tokens,
+0.37 GB vs 9.54 GB for the full cache. Per-prompt agreement is noisier than the aggregate rates:
+plain prompts, refuse/comply agreement AM~C2 0.82 vs C1~C2 0.80, unsafe-agreement AM~C2 0.90 vs
+AM~C1 0.83 (so AM tracks C2); jailbreak prompts, unsafe-agreement AM~C2 0.69 vs AM~C1 0.77 with
+C1~C2 refuse-agreement only 0.60, i.e. jailbreak outcomes on Nemo are close to coin flips per
+prompt under sampling, and only the aggregate rate is informative at n=140.
