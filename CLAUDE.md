@@ -169,3 +169,11 @@ Conditions today: 1 (no spec), 2 (full spec in context), 3 (cartridge),
 - Feasibility: Qwen3-32B fits one H200 (64 GB weights, ~29 GB full-spec KV cache); vLLM and
   Attention Matching are fine, cartridge training needs gradient checkpointing and ~3-4x
   the time of 8B.
+- Model options for headroom (decided 2026-11-04 evening): (1) lightly safety-tuned official
+  instruct models (Mistral-Nemo-12B-Instruct, 128k native context; checked tonight); (2) a
+  SELF-MADE refusal-direction-ablated Qwen3-8B (Arditi et al. 2024 recipe, computed on our train
+  split) as a controlled model that shares weights/tokenizer/pipeline with the pilot but is unsafe
+  without the spec - next session, since it modifies weights. Do NOT use community "abliterated"
+  or "uncensored" uploads (unclear provenance), and do not use models fine-tuned on harmful data.
+  Also evaluate on jailbreak-wrapped prompts (data/prompts_jailbreak.jsonl), where even
+  safety-tuned small models fail and the spec can matter.
