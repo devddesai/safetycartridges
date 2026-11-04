@@ -322,3 +322,28 @@ plain prompts, refuse/comply agreement AM~C2 0.82 vs C1~C2 0.80, unsafe-agreemen
 AM~C1 0.83 (so AM tracks C2); jailbreak prompts, unsafe-agreement AM~C2 0.69 vs AM~C1 0.77 with
 C1~C2 refuse-agreement only 0.60, i.e. jailbreak outcomes on Nemo are close to coin flips per
 prompt under sampling, and only the aggregate rate is informative at n=140.
+
+## Compressed conditions in THINKING mode, jailbreak validation set (the condition worth compressing)
+| Qwen3-8B thinking, jailbreak validation (n=140) | harmful refusal | **unsafe** | harm score | truncated at 4096 |
+|---|---|---|---|---|
+| C1 no spec | 0.636 | 0.464 | 0.445 | 3 |
+| C2 full spec in context (55.7k tokens, 8.2 GB) | 0.743 | 0.286 | 0.270 | 19 |
+| **C4 Attention Matching 2k (0.33 GB)** | 0.786 | **0.236** | 0.223 | 10 |
+| **C3 cartridge 1k (0.15 GB)** | 0.829 | **0.193** | 0.167 | 19 |
+
+With reasoning enabled, both compressed specs deliver the full spec's jailbreak protection (and
+numerically a bit more, within noise at n=140) at 25-55x less KV memory. Together with the Nemo
+result this is the project's positive finding: when the in-context spec actually changes
+behaviour, a compressed cache reproduces that change. (Caveat: the compressed caches were built /
+trained from non-thinking condition-2 data, yet transfer to thinking-mode generation.)
+
+### Updated bottom line
+- Compression (both methods) reproduces the in-context spec wherever the spec has an effect:
+  plain prompts on Qwen3-8B (fidelity at the noise ceiling), jailbreaks in thinking mode on
+  Qwen3-8B (unsafe 0.46 -> 0.29 full spec vs 0.24 / 0.19 compressed), and both prompt sets on
+  Mistral-Nemo-12B (unsafe 0.20 -> 0.14 plain, 0.85 -> 0.71 jailbreak, matched by the 28x cache).
+- The one negative case, non-thinking Qwen3-8B on jailbreaks, is a failure of the teacher
+  (the spec makes the model worse), and Attention Matching faithfully reproduces that failure
+  while the cartridge partially corrects it; the methods preserve different things.
+- Costs: 2-3 GPU-minutes (Attention Matching, no training) or ~9 GPU-minutes (cartridge) one-time;
+  single-stream decoding 3.6x faster and half the memory of the in-context spec.
