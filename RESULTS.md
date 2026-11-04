@@ -84,3 +84,9 @@ Decision: **preamble v2** is fixed for every spec-conditioned condition (2, 3, 4
 train/val/test rollouts (`sc.spec.DEFAULT_PREAMBLE = "v2"`). Even with v2 the spec-in-context
 teacher over-refuses more than the no-spec baseline on this 8B model; this is reported as a
 finding rather than tuned further (only 3 variants were tried, all chosen on validation).
+
+## Milestone 4 — condition 2 rollouts on the TRAIN split (done)
+`data/rollouts/spec_in_context_train.jsonl`: 757 prompts, preamble v2, YaRN x4, 140k output
+tokens, 15/757 hit the 1024-token cap, median response 108 tokens. Generation took 278 s of
+vLLM wall time (0.37 s/prompt batched; the 55.7k-token prefix is shared via prefix caching).
+Judge scores are filled in by `scripts/03_judge.py` (same judge as everywhere else).
