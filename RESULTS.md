@@ -178,3 +178,16 @@ plain, 85% -> 71% under jailbreaks) with the usual over-refusal cost. So Nemo ha
 a real teacher effect, unlike Qwen3-8B. Decision: run the Attention-Matching compaction on Nemo
 tonight if time allows (the compaction repo's Llama path should load Mistral weights), evaluated
 on the jailbreak and plain validation sets, to test whether a compressed spec carries the gain.
+
+## Milestone 7 — condition 3, cartridge (training done; evals running)
+`scripts/05_train_cartridge.py`: trainable KV prefix of 1,024 tokens (per layer K,V of shape
+(8 heads x 1024 x 128), 36 layers = 0.15 GB bf16), initialised from the KV of the first 1,024
+tokens of the spec system prompt, native RoPE (no YaRN; prompt tokens start at position 1024).
+Teacher = condition 2 (YaRN model, full spec cache); targets = top-20 teacher logprobs on the
+response tokens of the 757 TRAIN rollouts (teacher NLL 0.35). Loss = KL(teacher top-20 || student)
+on response tokens. AdamW lr 2e-2 (Cartridges default), cosine, batch 16 (2 x 8), 300 steps.
+Validation KL (64 held-out condition-2 validation conversations): 0.698 at init -> 0.164 (step 25)
+-> 0.102 (100) -> 0.088 (300); train KL 0.027 at the end (some overfitting, val still flat/falling).
+Cost: teacher targets ~4 min + training 5.2 min = **9.1 GPU-minutes**, peak 76.6 GB (batch 8 x
+~700 tokens with backward through the frozen 8B model). Compared with ~2 GPU-minutes for
+Attention Matching at a comparable size.
