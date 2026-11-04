@@ -297,3 +297,21 @@ deliberative-alignment premise: a spec in context is only useful if the model re
 and the non-thinking pilot was measuring pattern-matching. Implication for the compression
 question: the condition worth compressing is **thinking + spec**, and the fidelity test should be
 run in thinking mode (cheap to add: the prefix is identical, only generation changes).
+
+## Attention Matching on Mistral-Nemo-12B (validation): the compressed spec carries the safety gain
+Spec = 58,031 Nemo tokens (prefix 58,211 incl. template/preamble) compacted to 2,048 spec tokens
+with the same recipe (self + 96 train-conversation queries; Nemo train rollouts generated for
+this). Nemo has no rope scaling (128k native).
+
+| Nemo-12B, validation | harmful refusal | **unsafe** | benign false refusal | benign any refusal | benign helpful | jailbreak refusal | **jailbreak unsafe** |
+|---|---|---|---|---|---|---|---|
+| C1 no spec | 0.886 | 0.200 | 0.064 | 0.191 | 0.925 | 0.314 | 0.850 |
+| C2 full spec in context (58k tokens) | 0.886 | 0.143 | 0.145 | 0.291 | 0.804 | 0.486 | 0.714 |
+| **C4 AM 2k (28x)** | 0.914 | **0.143** | 0.136 | 0.355 | 0.693 | 0.414 | **0.721** |
+
+The 28x-compressed cache reproduces the full spec's safety effect on both prompt sets (unsafe
+0.143 vs 0.143 plain; 0.721 vs 0.714 under jailbreaks), with the same over-refusal profile as the
+full spec and somewhat lower benign helpfulness (0.69 vs 0.80). This is the result the project is
+after: on a model with headroom, a ~0.3 GB compacted spec behaves like the 9 GB in-context spec.
+Per-prompt agreement numbers (refuse/comply and unsafe) are printed in the log above the table in
+the session transcript and in `results/summary.json` fidelity fields.

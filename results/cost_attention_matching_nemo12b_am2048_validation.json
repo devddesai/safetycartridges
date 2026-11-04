@@ -1,0 +1,60 @@
+{
+ "condition": "attention_matching",
+ "tag": "nemo12b_am2048",
+ "split": "validation",
+ "engine": "hf_prefix",
+ "prefix_tokens": 2228,
+ "prefix_kv_gb": 0.36646144,
+ "yarn_factor": null,
+ "prefix_meta": {
+  "tag": "nemo12b_am2048",
+  "algo": "AM-HighestAttnKeys-basic",
+  "algo_kwargs": {
+   "algorithm": "highest_attention_keys",
+   "score_method": "rms",
+   "nnls_iters": 2,
+   "nnls_lower_bound": 0.049787068367863944,
+   "nnls_upper_bound": 20.085536923187668,
+   "c2_method": "lsq"
+  },
+  "target_spec_tokens": 2048,
+  "prefix_tokens_before": 58211,
+  "prefix_tokens_after": 2228,
+  "spec_tokens_before": 58031,
+  "compression_ratio": 28.33544921875,
+  "queries": "self,train",
+  "query_stats": {
+   "self_tokens": 16000,
+   "train_convs": 96,
+   "train_tokens": 20938,
+   "queries_per_kv_head": 50000
+  },
+  "spec_hash": "00d71be895dee0faca3890a4ac4abb9e61c4c8d6d1f5828fecbc554d16a29c4f",
+  "yarn_factor": null,
+  "model": "mistralai/Mistral-Nemo-Instruct-2407",
+  "time_prefill_s": 13.996662378311157,
+  "time_queries_s": 72.79856967926025,
+  "time_compact_s": 97.35661840438843,
+  "gpu_minutes_total": 3.0691975076993305,
+  "prefix_kv_gb": 0.36646144,
+  "full_kv_gb": 9.53729024
+ },
+ "latency": {
+  "n": 4,
+  "max_new_tokens": 128,
+  "latency_s_mean": 3.8148266077041626,
+  "latency_s_min": 2.275967836380005,
+  "latency_s_max": 4.979513168334961,
+  "ms_per_token_mean": 29.80333287268877,
+  "peak_mem_gb": 25.32791808,
+  "base_alloc_gb": 24.862034432,
+  "prefix_kv_gb": 0.36646144,
+  "prefix_tokens": 2228
+ },
+ "n_prompts": 250,
+ "wall_s": 792.6781783103943,
+ "s_per_prompt_batched": 3.1707127132415773,
+ "batch_size": 32,
+ "peak_mem_gb_batched": 55.74135552,
+ "output_tokens": 51932
+}
