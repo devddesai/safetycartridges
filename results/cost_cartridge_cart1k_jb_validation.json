@@ -1,0 +1,24 @@
+{
+ "condition": "cartridge",
+ "tag": "cart1k_jb",
+ "split": "validation",
+ "engine": "hf_prefix",
+ "prefix_tokens": 1024,
+ "prefix_kv_gb": 0.151584768,
+ "yarn_factor": null,
+ "prefix_meta": {
+  "tag": "cart1k",
+  "kind": "cartridge",
+  "n_tokens": 1024,
+  "spec_hash": "00d71be895dee0faca3890a4ac4abb9e61c4c8d6d1f5828fecbc554d16a29c4f",
+  "yarn_factor": null,
+  "compression_ratio": 54.34765625,
+  "prefix_kv_gb": 0.151584768
+ },
+ "n_prompts": 140,
+ "wall_s": 124.14154195785522,
+ "s_per_prompt_batched": 0.8867252996989659,
+ "batch_size": 32,
+ "peak_mem_gb_batched": 32.023584256,
+ "output_tokens": 12246
+}

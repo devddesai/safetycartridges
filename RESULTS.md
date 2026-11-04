@@ -196,3 +196,21 @@ refusal 0.273, any refusal 0.509, helpfulness 0.771, refuse/comply agreement wit
 (C2 self-agreement ~0.86), latency 35 ms/token at batch 1 with no YaRN (native RoPE). So on
 plain prompts the 1k-token cartridge (54x) reproduces condition 2 as well as the 2k Attention
 Matching cache does. The discriminating test is the jailbreak set (next).
+
+### Jailbreak set, validation (140 prompts): the compressed conditions diverge
+| validation, jailbreak | harmful refusal | **unsafe** | harm score | unsafe-agreement w/ C2 | w/ C1 |
+|---|---|---|---|---|---|
+| C1 no spec | 0.721 | 0.343 | 0.323 | 0.743 | - |
+| C2 full spec in context | 0.600 | 0.486 | 0.449 | - | 0.743 |
+| C4 Attention Matching 2k | 0.607 | 0.429 | 0.409 | **0.786** | 0.700 |
+| C3 cartridge 1k | 0.793 | **0.257** | 0.233 | 0.729 | 0.771 |
+
+The two compression methods preserve different things. Attention Matching reproduces the
+teacher's *mechanism* (attention over the spec), so it inherits condition 2's jailbreak
+vulnerability (unsafe 0.43 vs 0.49, per-prompt agreement with C2 above the C1/C2 baseline). The
+cartridge was distilled on condition-2 *responses* to plain train prompts (mostly refusals of
+harmful requests, no jailbreaks), so it learned a refusal-leaning behaviour and generalises to
+jailbreaks as the safest condition (unsafe 0.26, below even the bare model's 0.34) while being
+less faithful to the teacher. For the research question "is the spec-in-context behaviour
+recovered?", AM scores higher on fidelity; for "is the deployed model safe?", the cartridge is
+better here, but only because the teacher itself is a poor jailbreak policy on this 8B model.

@@ -1,0 +1,47 @@
+{
+ "condition": "attention_matching",
+ "tag": "am2048_jb",
+ "split": "validation",
+ "engine": "hf_prefix",
+ "prefix_tokens": 2223,
+ "prefix_kv_gb": 0.329075136,
+ "yarn_factor": 4.0,
+ "prefix_meta": {
+  "tag": "am2048",
+  "algo": "AM-HighestAttnKeys-basic",
+  "algo_kwargs": {
+   "algorithm": "highest_attention_keys",
+   "score_method": "rms",
+   "nnls_iters": 2,
+   "nnls_lower_bound": 0.049787068367863944,
+   "nnls_upper_bound": 20.085536923187668,
+   "c2_method": "lsq"
+  },
+  "target_spec_tokens": 2048,
+  "prefix_tokens_before": 55749,
+  "prefix_tokens_after": 2223,
+  "spec_tokens_before": 55574,
+  "compression_ratio": 27.1357421875,
+  "queries": "self,train",
+  "query_stats": {
+   "self_tokens": 16000,
+   "train_convs": 96,
+   "train_tokens": 15662,
+   "queries_per_kv_head": 50000
+  },
+  "spec_hash": "00d71be895dee0faca3890a4ac4abb9e61c4c8d6d1f5828fecbc554d16a29c4f",
+  "yarn_factor": 4.0,
+  "time_prefill_s": 11.141134023666382,
+  "time_queries_s": 32.68755912780762,
+  "time_compact_s": 82.65835309028625,
+  "gpu_minutes_total": 2.108117437362671,
+  "prefix_kv_gb": 0.329075136,
+  "full_kv_gb": 8.220524544
+ },
+ "n_prompts": 140,
+ "wall_s": 311.1674270629883,
+ "s_per_prompt_batched": 2.222624479021345,
+ "batch_size": 32,
+ "peak_mem_gb_batched": 46.478374912,
+ "output_tokens": 20768
+}
