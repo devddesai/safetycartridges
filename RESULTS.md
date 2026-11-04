@@ -214,3 +214,69 @@ jailbreaks as the safest condition (unsafe 0.26, below even the bare model's 0.3
 less faithful to the teacher. For the research question "is the spec-in-context behaviour
 recovered?", AM scores higher on fidelity; for "is the deployed model safe?", the cartridge is
 better here, but only because the teacher itself is a poor jailbreak policy on this 8B model.
+
+## Milestone 8 — final comparison on the TEST split (Qwen3-8B, non-thinking)
+Plots: `results/plot_metrics_test.png`, `results/plot_safety_vs_overrefusal_test.png`,
+`results/plot_jailbreak_unsafe.png`, `results/plot_compression_sweep_validation.png`.
+Full per-file table: `results/summary.md`; costs: `results/cost_table.md`.
+
+### Plain prompts (test, n=249: 139 harmful, 110 benign)
+| condition | prefix tokens | KV | harmful refusal | harmful unsafe | benign false refusal | benign any refusal | benign helpful | spec compl. (bal.) | agree w/ C2 (refuse?) |
+|---|---|---|---|---|---|---|---|---|---|
+| C1 no spec | 0 | 0 | 0.971 | 0.014 | 0.155 | 0.318 | 0.860 | 0.893 | 0.871 |
+| C2 full spec in context | 55,749 | 8.22 GB | 0.986 | 0.000 | 0.191 | 0.427 | 0.805 | 0.885 | - |
+| C4 Attention Matching 2k (25x) | 2,223 | 0.33 GB | 0.993 | 0.000 | 0.182 | 0.427 | 0.798 | 0.897 | **0.932** |
+| C3 cartridge 1k (54x) | 1,024 | 0.15 GB | 0.986 | 0.000 | 0.182 | 0.473 | 0.758 | 0.890 | 0.892 |
+
+### Jailbreak-wrapped harmful prompts (test, n=139)
+| condition | harmful refusal | **unsafe** | harm score | unsafe-agreement w/ C2 | w/ C1 |
+|---|---|---|---|---|---|
+| C1 no spec | 0.719 | 0.281 | 0.265 | 0.748 | - |
+| C2 full spec in context | 0.619 | **0.475** | 0.445 | - | 0.748 |
+| C4 Attention Matching 2k | 0.691 | 0.388 | 0.371 | **0.813** | 0.734 |
+| C3 cartridge 1k | 0.827 | **0.209** | 0.200 | 0.691 | 0.741 |
+
+### Cost (HF engine, same code path for every condition; batch 1, 128 new tokens)
+| condition | prefix tokens | prefix KV | ms/token | peak GB | one-time cost |
+|---|---|---|---|---|---|
+| C2 full spec | 55,749 | 8.22 GB | (measured in queue 6) | | prefill 11 s (then cached) |
+| C4 AM 2k | 2,223 | 0.33 GB | 38.3 | 17.1 | 2.1 GPU-min |
+| C4 AM 1k | 1,199 | 0.18 GB | 37.6 | 16.8 | 1.7 GPU-min |
+| C4 AM 4k | 4,271 | 0.63 GB | 34.5 | 17.8 | 3.0 GPU-min |
+| C3 cartridge 1k | 1,024 | 0.15 GB | 35.0 | 16.8 | 9.1 GPU-min (incl. 4 min teacher targets) |
+vLLM throughput for reference: C1 1,600 output tok/s, C2 250-500 tok/s with the shared 55.7k prefix.
+
+### Summary of findings
+1. **Compression works as compression.** Both a 25x Attention-Matching cache (2 GPU-minutes, no
+   training) and a 54x trained cartridge (9 GPU-minutes) reproduce the spec-in-context behaviour on
+   plain prompts at the sampling-noise ceiling (per-prompt refuse/comply agreement with C2 of
+   0.93 / 0.89 vs ~0.86 for C2 against a resample of itself), at 25-55x less KV memory
+   (8.2 GB -> 0.15-0.33 GB) and ~35-38 ms/token single-stream latency.
+2. **But the teacher is not a good policy on Qwen3-8B.** The base model is already 1-2% unsafe
+   on plain harmful prompts; the full spec in context adds over-refusal (+3.6 pts full refusals,
+   +11 pts any-refusal, shorter answers) and, on jailbreak-wrapped prompts, makes the model
+   *more* unsafe (28% -> 48%): it slips into the jailbreak persona and complies. The preamble
+   wording swung false refusals between 28% and 48% on the pilot, i.e. the 8B model pattern-matches
+   the presence of a policy document rather than reasoning over it.
+3. **The two compression methods fail differently under distribution shift.** Attention Matching
+   reproduces the teacher's attention, so it inherits the jailbreak vulnerability (39% unsafe,
+   agreement with C2 0.81). The cartridge, distilled on condition-2 responses to plain prompts,
+   learned a refusal-leaning behaviour and is the safest condition on jailbreaks (21% unsafe, below
+   the bare model's 28%) while being less faithful to the teacher. Fidelity and safety come apart
+   as soon as the teacher is wrong.
+4. **Headroom exists on a lightly safety-tuned model.** Mistral-Nemo-12B-Instruct is 20% unsafe on
+   plain prompts and 85% under jailbreaks; the spec in context reduces both (14% / 71%) at an
+   over-refusal cost (6% -> 15%). This is the model (and prompt set) on which the compression
+   question is worth asking; a Nemo compaction run is queued (results appended below if finished).
+
+### Suggested next steps
+- Main model: Qwen3-32B as planned, plus Mistral-Nemo-12B (or a self-made refusal-ablated
+  Qwen3-8B) so the no-spec baseline is unsafe and the spec has something to carry.
+- Thinking-mode arm: deliberative alignment relies on reasoning over the spec (ablation queued).
+- Train cartridges on spec-grounded self-study data (summaries / QA about the spec, as in the
+  Cartridges paper) in addition to on-task responses, and on jailbreak-wrapped train prompts, then
+  re-test whether fidelity and safety can be had together.
+- For Attention Matching: on-policy query refinement and queries from jailbreak conversations.
+- Post-training phase (context distillation / LoRA) can start from
+  `data/rollouts/spec_in_context_train.jsonl` (757 judged rollouts, preamble v2) using
+  `data/splits.json`.

@@ -1,12 +1,20 @@
 | file | n | harm refusal | harm unsafe | harm score | benign full-refusal | benign any-refusal | benign helpful | spec compl. (bal) | out toks | agree w/ C2 (refused?) | |Δ compl.| vs C2 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
+| attention_matching_am2048_test | 249 | 0.993 | 0.000 | 0.003 | 0.182 | 0.427 | 0.798 | 0.897 | 194.675 | 0.932 | 0.105 |
+| attention_matching_am2048_jb_test | 139 | 0.691 | 0.388 | 0.371 |  |  |  |  | 147.216 |  |  |
+| cartridge_cart1k_test | 249 | 0.986 | 0.000 | 0.000 | 0.182 | 0.473 | 0.758 | 0.890 | 176.414 | 0.892 | 0.101 |
+| cartridge_cart1k_jb_test | 139 | 0.827 | 0.209 | 0.200 |  |  |  |  | 81.921 |  |  |
 | no_spec_test | 249 | 0.971 | 0.014 | 0.009 | 0.155 | 0.318 | 0.860 | 0.893 | 286.984 | 0.871 | 0.104 |
+| no_spec_jb_test | 139 | 0.719 | 0.281 | 0.265 |  |  |  |  | 102.086 |  |  |
 | spec_in_context_test | 249 | 0.986 | 0.000 | 0.000 | 0.191 | 0.427 | 0.805 | 0.885 | 190.157 |  |  |
+| spec_in_context_jb_test | 139 | 0.619 | 0.475 | 0.445 |  |  |  |  | 131.784 |  |  |
 | spec_in_context_train | 757 | 0.995 | 0.002 | 0.002 | 0.212 | 0.521 | 0.778 | 0.888 | 185.452 |  |  |
 | attention_matching_am1024_validation | 250 | 0.986 | 0.000 | 0.000 | 0.300 | 0.473 | 0.769 | 0.928 | 182.412 | 0.916 | 0.101 |
 | attention_matching_am2048_validation | 250 | 0.979 | 0.000 | 0.000 | 0.255 | 0.445 | 0.789 | 0.886 | 189.848 | 0.900 | 0.102 |
+| attention_matching_am2048_jb_validation | 140 | 0.607 | 0.429 | 0.409 |  |  |  |  | 148.343 |  |  |
 | attention_matching_am4096_validation | 250 | 0.986 | 0.000 | 0.000 | 0.264 | 0.473 | 0.765 | 0.904 | 202.344 | 0.932 | 0.090 |
 | cartridge_cart1k_validation | 250 | 0.979 | 0.000 | 0.000 | 0.273 | 0.509 | 0.771 | 0.909 | 181.476 | 0.928 | 0.091 |
+| cartridge_cart1k_jb_validation | 140 | 0.793 | 0.257 | 0.233 |  |  |  |  | 87.471 |  |  |
 | no_spec_validation | 250 | 0.950 | 0.021 | 0.017 | 0.109 | 0.327 | 0.887 | 0.944 | 321.204 | 0.848 | 0.097 |
 | no_spec_jb_validation | 140 | 0.721 | 0.343 | 0.323 |  |  |  |  | 115.500 |  |  |
 | no_spec_nemo12b_validation | 250 | 0.886 | 0.200 | 0.170 | 0.064 | 0.191 | 0.925 | 0.760 | 427.492 | 0.784 | 0.251 |

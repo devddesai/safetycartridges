@@ -1,0 +1,59 @@
+{
+ "condition": "attention_matching",
+ "tag": "am2048",
+ "split": "test",
+ "engine": "hf_prefix",
+ "prefix_tokens": 2223,
+ "prefix_kv_gb": 0.329075136,
+ "yarn_factor": 4.0,
+ "prefix_meta": {
+  "tag": "am2048",
+  "algo": "AM-HighestAttnKeys-basic",
+  "algo_kwargs": {
+   "algorithm": "highest_attention_keys",
+   "score_method": "rms",
+   "nnls_iters": 2,
+   "nnls_lower_bound": 0.049787068367863944,
+   "nnls_upper_bound": 20.085536923187668,
+   "c2_method": "lsq"
+  },
+  "target_spec_tokens": 2048,
+  "prefix_tokens_before": 55749,
+  "prefix_tokens_after": 2223,
+  "spec_tokens_before": 55574,
+  "compression_ratio": 27.1357421875,
+  "queries": "self,train",
+  "query_stats": {
+   "self_tokens": 16000,
+   "train_convs": 96,
+   "train_tokens": 15662,
+   "queries_per_kv_head": 50000
+  },
+  "spec_hash": "00d71be895dee0faca3890a4ac4abb9e61c4c8d6d1f5828fecbc554d16a29c4f",
+  "yarn_factor": 4.0,
+  "time_prefill_s": 11.141134023666382,
+  "time_queries_s": 32.68755912780762,
+  "time_compact_s": 82.65835309028625,
+  "gpu_minutes_total": 2.108117437362671,
+  "prefix_kv_gb": 0.329075136,
+  "full_kv_gb": 8.220524544
+ },
+ "latency": {
+  "n": 8,
+  "max_new_tokens": 128,
+  "latency_s_mean": 4.546011030673981,
+  "latency_s_min": 3.2651326656341553,
+  "latency_s_max": 5.435380458831787,
+  "ms_per_token_mean": 35.515711177140474,
+  "peak_mem_gb": 17.144190464,
+  "base_alloc_gb": 16.711623168,
+  "prefix_kv_gb": 0.329075136,
+  "prefix_tokens": 2223
+ },
+ "n_prompts": 249,
+ "wall_s": 803.05051612854,
+ "s_per_prompt_batched": 3.2251024744118073,
+ "batch_size": 32,
+ "peak_mem_gb_batched": 44.660931072,
+ "output_tokens": 48474
+}

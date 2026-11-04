@@ -23,7 +23,8 @@ def label(r):
 
 
 split = sys.argv[1] if len(sys.argv) > 1 else "test"
-sel = [r for r in rows if r["split"] == split and not r["tag"].startswith("pilot")]
+sel = [r for r in rows if r["split"] == split and not r["tag"].startswith("pilot") and "jb" not in r["tag"].split("_")
+       and "nemo" not in r["tag"] and "thinking" not in r["tag"] and r.get("benign_false_refusal_rate") is not None]
 sel.sort(key=lambda r: (COND_ORDER.index(r["condition"]), r["tag"]))
 
 # 1. Safety vs over-refusal scatter
@@ -56,7 +57,7 @@ fig.tight_layout(); fig.savefig(R / f"plot_metrics_{split}.png", dpi=160); plt.c
 
 # 3. Compression sweep on validation (condition 4 tags am<T>, condition 3 tags cart*)
 val = [r for r in rows if r["split"] == "validation" and r["condition"] in ("attention_matching", "cartridge")
-       and r["cost"].get("prefix_tokens")]
+       and r["cost"].get("prefix_tokens") and "jb" not in r["tag"].split("_") and "nemo" not in r["tag"]]
 if val:
     fig, axs = plt.subplots(1, 2, figsize=(9, 3.8))
     for cond in ("attention_matching", "cartridge"):
@@ -76,3 +77,23 @@ if val:
     axs[0].legend(frameon=False, fontsize=8)
     fig.tight_layout(); fig.savefig(R / "plot_compression_sweep_validation.png", dpi=160); plt.close(fig)
 print("plots written to results/")
+
+# 4. Jailbreak unsafe rate by condition (validation and test)
+jb = [r for r in rows if "jb" in r["tag"].split("_") and "nemo" not in r["tag"] and "thinking" not in r["tag"]]
+if jb:
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+    conds = [c for c in COND_ORDER if any(r["condition"] == c for r in jb)]
+    w = 0.38
+    for j, sp in enumerate(("validation", "test")):
+        for i, c in enumerate(conds):
+            rr = [r for r in jb if r["condition"] == c and r["split"] == sp]
+            if rr:
+                ax.bar(i + (j - 0.5) * w, rr[0]["harmful_unsafe_rate"], width=w * 0.92, color=COLORS[c],
+                       alpha=1.0 if sp == "test" else 0.55, zorder=3, label=f"{sp}" if i == 0 else None)
+                ax.text(i + (j - 0.5) * w, rr[0]["harmful_unsafe_rate"] + 0.01, f"{rr[0]['harmful_unsafe_rate']:.2f}",
+                        ha="center", fontsize=8, color=INK)
+    ax.set_xticks(range(len(conds))); ax.set_xticklabels([COND_LABEL[c] for c in conds], fontsize=8)
+    ax.set_ylabel("unsafe rate on jailbreak prompts (lower is better)"); ax.set_ylim(0, 0.65)
+    ax.grid(True, axis="y", color="#e6e5e1", linewidth=0.8, zorder=0); ax.legend(frameon=False, fontsize=8, title="split (light = validation)")
+    ax.set_title("Jailbreak-wrapped harmful prompts: unsafe rate by condition", color=INK, loc="left")
+    fig.tight_layout(); fig.savefig(R / "plot_jailbreak_unsafe.png", dpi=160); plt.close(fig)

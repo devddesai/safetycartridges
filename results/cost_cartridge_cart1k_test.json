@@ -1,0 +1,36 @@
+{
+ "condition": "cartridge",
+ "tag": "cart1k",
+ "split": "test",
+ "engine": "hf_prefix",
+ "prefix_tokens": 1024,
+ "prefix_kv_gb": 0.151584768,
+ "yarn_factor": null,
+ "prefix_meta": {
+  "tag": "cart1k",
+  "kind": "cartridge",
+  "n_tokens": 1024,
+  "spec_hash": "00d71be895dee0faca3890a4ac4abb9e61c4c8d6d1f5828fecbc554d16a29c4f",
+  "yarn_factor": null,
+  "compression_ratio": 54.34765625,
+  "prefix_kv_gb": 0.151584768
+ },
+ "latency": {
+  "n": 8,
+  "max_new_tokens": 128,
+  "latency_s_mean": 4.051820129156113,
+  "latency_s_min": 0.570084810256958,
+  "latency_s_max": 5.425802707672119,
+  "ms_per_token_mean": 31.65484475903213,
+  "peak_mem_gb": 16.76811008,
+  "base_alloc_gb": 16.535171584,
+  "prefix_kv_gb": 0.151584768,
+  "prefix_tokens": 1024
+ },
+ "n_prompts": 249,
+ "wall_s": 433.8769028186798,
+ "s_per_prompt_batched": 1.74247752136016,
+ "batch_size": 32,
+ "peak_mem_gb_batched": 32.367238656,
+ "output_tokens": 43927
+}
