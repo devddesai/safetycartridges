@@ -64,7 +64,7 @@ def main():
     recs = read_jsonl(out_path)
     for r, o in zip(todo, outs):
         text = o["text"].split("</think>")[-1].strip() if args.thinking else o["text"]
-    recs.append(make_record(r, args.split, name, text, engine="vllm-0.11.0", spec_hash=spec_hash,
+        recs.append(make_record(r, args.split, name, text, engine="vllm-0.11.0", spec_hash=spec_hash,
                                 extra={"finish_reason": o["finish_reason"], "n_output_tokens": o["n_output_tokens"],
                                        "n_prompt_tokens": o["n_prompt_tokens"],
                                        "yarn_factor": yarn, "preamble": args.preamble if args.condition == 2 else None,
