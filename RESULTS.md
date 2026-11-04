@@ -191,3 +191,8 @@ Validation KL (64 held-out condition-2 validation conversations): 0.698 at init 
 Cost: teacher targets ~4 min + training 5.2 min = **9.1 GPU-minutes**, peak 76.6 GB (batch 8 x
 ~700 tokens with backward through the frozen 8B model). Compared with ~2 GPU-minutes for
 Attention Matching at a comparable size.
+Cartridge validation eval (plain prompts, n=250): harmful refusal 0.979, unsafe 0.000, benign false
+refusal 0.273, any refusal 0.509, helpfulness 0.771, refuse/comply agreement with C2 **0.928**
+(C2 self-agreement ~0.86), latency 35 ms/token at batch 1 with no YaRN (native RoPE). So on
+plain prompts the 1k-token cartridge (54x) reproduces condition 2 as well as the 2k Attention
+Matching cache does. The discriminating test is the jailbreak set (next).
