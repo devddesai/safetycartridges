@@ -1,5 +1,8 @@
 # CLAUDE.md — Safety Spec Cartridges
 
+> **New session? Read `CHECKPOINT_1.md` first** (full handover from session 1, 2026-11-04), then
+> RESULTS.md for the numbers. Section 6 below was session 1's plan and is complete.
+
 ## 1. Context and motivation
 This is a research project (advised by Prof. Boaz Barak, Harvard). The core idea:
 
