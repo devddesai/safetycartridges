@@ -1,0 +1,4 @@
+condition: 3
+name: cartridge
+engine: hf_prefix            # HF generate with a trained KV prefix (CompactedPrefixCache, beta=0)
+prefix: cache/cartridge/<run>.pt

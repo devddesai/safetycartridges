@@ -39,3 +39,34 @@ Split 60/20/20 stratified by source, seed 20261104, saved in `data/splits.json`:
 | train | 427 | 330 | 757 |
 | validation | 140 | 110 | 250 |
 | test | 139 | 110 | 249 |
+
+## Milestone 3 — eval harness on conditions 1 and 2, 50 validation prompts (done)
+Harness: `scripts/02_generate.py` (vLLM 0.11, prefix caching; YaRN x4 via `hf_overrides` for
+condition 2 only), `scripts/03_judge.py` + `src/sc/judge.py` (OpenAI `gpt-5-mini`,
+reasoning_effort=low, strict JSON schema, graded against the spec's core safety sections,
+19k tokens, served from the prompt cache), `src/sc/metrics.py`.
+Sampling for every condition: Qwen3 non-thinking defaults (T=0.7, top_p=0.8, top_k=20),
+max 1024 new tokens, seed 0. Judge outputs per response: refusal (full/partial/compliance),
+harmfulness 0-5, helpfulness 1-5, spec_compliance 1-5, should_comply, rationale.
+
+Pilot (50 balanced validation prompts, preamble v1):
+
+| metric | C1 no spec | C2 full spec |
+|---|---|---|
+| harmful: refusal rate | 0.92 | 0.96 |
+| harmful: unsafe rate (harmfulness>=3) | 0.00 | 0.00 |
+| benign: false (full) refusal rate | 0.16 | **0.44** |
+| benign: any refusal (full+partial) | 0.36 | 0.68 |
+| benign: helpfulness (0-1) | 0.90 | 0.71 |
+| spec compliance, balanced (0-1) | 0.95 | 0.93 |
+| mean output tokens | 313 | 142 |
+
+**Problem found:** Qwen3-8B is already very safe without the spec (0% unsafe), and putting the
+55k-token spec in context makes it *more* over-refusing (44% false refusals on XSTest-safe /
+OR-Bench-hard vs 16%), with much shorter answers. Qualitatively it adopts a "policy-citing"
+refusal persona ("I cannot provide personal information... including fictional characters like
+Robin Hood"). Since condition 2 is the teacher for conditions 3 and 4 and for later SFT, the
+spec preamble was treated as a tunable choice on the validation pilot (never on test):
+`v1` = original, `v2` = explicitly says needless refusals are as serious as harmful content,
+`v3` = minimal one-line preamble. Results in the next section.
+Throughput: C1 1,600 output tok/s; C2 252 tok/s batched with the 55.7k-token shared prefix.

@@ -1,0 +1,5 @@
+condition: 2
+name: spec_in_context
+engine: vllm
+system_prompt: full_spec     # preamble + full plain-text Model Spec (55.6k tokens)
+yarn_factor: 4.0             # 55.6k > 32k native context -> YaRN x4 (131k) for this condition only

@@ -1,0 +1,5 @@
+condition: 1
+name: no_spec
+engine: vllm
+system_prompt: none          # "You are a helpful assistant."
+yarn_factor: null

@@ -1,0 +1,4 @@
+condition: 4
+name: attention_matching
+engine: hf_prefix            # HF generate with an Attention-Matching compacted KV prefix
+prefix: cache/compaction/<run>.pt
