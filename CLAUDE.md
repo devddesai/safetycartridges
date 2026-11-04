@@ -151,3 +151,21 @@ Conditions today: 1 (no spec), 2 (full spec in context), 3 (cartridge),
 - Do not modify base model weights in this session.
 - Write clean, reusable code (e.g. a shared eval harness and one config per
   condition), so later phases can plug in easily.
+
+## 8. Notes and lessons (added 2026-11-04 after the Qwen3-8B pilot)
+- A small model may not do well on these safety tests when handed a long, detailed spec.
+  In the pilot, Qwen3-8B (non-thinking) did not reason over the 55k-token Model Spec; it
+  simply became more cautious when the spec was present (benign any-refusal 32% -> 43% on
+  test, false full refusals 15.5% -> 19.1%, shorter answers), and the preamble wording alone
+  swung false refusals between 28% and 48% on the validation pilot. Its safety was already
+  near the ceiling without the spec (0-2% unsafe), so the spec had no room to help on
+  safety and could only hurt over-refusal.
+- Implications: (a) the compression question (do cartridges / compacted caches reproduce
+  the in-context behaviour?) is still answerable at 8B and the pilot harness carries over;
+  (b) for behavioural claims we likely need to ramp up to a larger model (Qwen3-32B as
+  planned), add a thinking-mode arm (deliberative alignment relies on reasoning over the
+  spec, so non-thinking mode may be as big a handicap as size), and use harder evals
+  (jailbreaks, subtler dual-use prompts) so there is headroom for the spec to help.
+- Feasibility: Qwen3-32B fits one H200 (64 GB weights, ~29 GB full-spec KV cache); vLLM and
+  Attention Matching are fine, cartridge training needs gradient checkpointing and ~3-4x
+  the time of 8B.
