@@ -28,9 +28,14 @@ def main():
     ap.add_argument("--batch-size", type=int, default=None)
     ap.add_argument("--latency-n", type=int, default=8, help="prompts for batch-1 latency measurement")
     ap.add_argument("--model", default=None, help="HF model (default Qwen/Qwen3-8B; must match the prefix)")
+    ap.add_argument("--thinking", action="store_true", help="Qwen3 thinking mode (max 4096 new tokens; <think> stripped)")
     args = ap.parse_args()
 
     name = CONDITIONS[args.condition]
+    if args.thinking:
+        from sc import rollouts as R
+        R.SAMPLING.update({"enable_thinking": True, "max_new_tokens": 4096, "temperature": 0.6, "top_p": 0.95, "top_k": 20})
+        args.tag = (args.tag + "_" if args.tag else "") + "thinking"
     model_name = args.model or H.MODEL_NAME
     if args.model:
         from sc import rollouts as R
@@ -86,10 +91,12 @@ def main():
         wall = time.time() - t0
         recs = read_jsonl(out_path)
         for r, o in zip(todo, outs):
-            recs.append(make_record(r, args.split, name, o["text"], engine="hf_prefix(compaction-repo qwen3, sdpa)",
+            text = o["text"].split("</think>")[-1].strip() if args.thinking else o["text"]
+            recs.append(make_record(r, args.split, name, text, engine="hf_prefix(compaction-repo qwen3, sdpa)",
                                     spec_hash=spec_hash,
                                     extra={"finish_reason": o["finish_reason"], "n_output_tokens": o["n_output_tokens"],
-                                           "yarn_factor": yarn, "prefix_tag": tag, "prefix_tokens": t}))
+                                           "yarn_factor": yarn, "prefix_tag": tag, "prefix_tokens": t,
+                                           "thinking": args.thinking, "raw_response": o["text"] if args.thinking else None}))
         write_jsonl(out_path, recs)
         cost.update({"n_prompts": len(todo), "wall_s": wall, "s_per_prompt_batched": wall / len(todo),
                      "batch_size": bs, "peak_mem_gb_batched": torch.cuda.max_memory_allocated() / 1e9,
