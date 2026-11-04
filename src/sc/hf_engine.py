@@ -24,35 +24,70 @@ from .rollouts import MODEL_NAME, SAMPLING  # noqa: E402
 NATIVE_MAX_POS = 32768
 
 
-def load_model(yarn_factor: float | None = None, device: str = "cuda"):
-    """Same rope scaling as the vLLM condition-2 run: yarn, factor 4, original 32768 (Qwen3 docs)."""
+def is_qwen(name: str) -> bool:
+    return "qwen" in name.lower()
+
+
+def load_model(yarn_factor: float | None = None, device: str = "cuda", model_name: str | None = None):
+    """Qwen3: same rope scaling as the vLLM condition-2 run (yarn x4, original 32768).
+    Mistral (Nemo): loaded through the compaction repo's Llama model class with a LlamaConfig built from
+    the Mistral config (identical weight names; head_dim/rope_theta carried over), no rope scaling."""
     from transformers import AutoTokenizer
-    from models.qwen3 import Qwen3ForCausalLM
-    tok = AutoTokenizer.from_pretrained(MODEL_NAME)
+    model_name = model_name or MODEL_NAME
+    tok = AutoTokenizer.from_pretrained(model_name)
     kwargs = {"device_map": device, "dtype": torch.bfloat16, "attn_implementation": "sdpa"}
-    if yarn_factor:
-        kwargs["rope_scaling"] = {"rope_type": "yarn", "factor": float(yarn_factor),
-                                  "original_max_position_embeddings": NATIVE_MAX_POS}
-        kwargs["max_position_embeddings"] = int(NATIVE_MAX_POS * yarn_factor)
-    model = Qwen3ForCausalLM.from_pretrained(MODEL_NAME, **kwargs)
+    if is_qwen(model_name):
+        from models.qwen3 import Qwen3ForCausalLM
+        if yarn_factor:
+            kwargs["rope_scaling"] = {"rope_type": "yarn", "factor": float(yarn_factor),
+                                      "original_max_position_embeddings": NATIVE_MAX_POS}
+            kwargs["max_position_embeddings"] = int(NATIVE_MAX_POS * yarn_factor)
+        model = Qwen3ForCausalLM.from_pretrained(model_name, **kwargs)
+    else:
+        from transformers import AutoConfig, LlamaConfig
+        from models.llama import LlamaForCausalLM
+        assert not yarn_factor, "rope scaling only implemented for Qwen3"
+        d = AutoConfig.from_pretrained(model_name).to_dict()
+        for k in ("model_type", "architectures", "sliding_window"):
+            d.pop(k, None)
+        model = LlamaForCausalLM.from_pretrained(model_name, config=LlamaConfig(**d), **kwargs)
     model.eval()
-    print(f"loaded {MODEL_NAME} rope_scaling={kwargs.get('rope_scaling')}", flush=True)
+    print(f"loaded {model_name} rope_scaling={kwargs.get('rope_scaling')}", flush=True)
     if tok.pad_token_id is None:
         tok.pad_token_id = tok.eos_token_id
     return model, tok
 
 
+def _render(tok, system_prompt, user_prompt):
+    return tok.apply_chat_template([{"role": "system", "content": system_prompt},
+                                    {"role": "user", "content": user_prompt}], tokenize=False,
+                                   add_generation_prompt=True, enable_thinking=SAMPLING["enable_thinking"])
+
+
 def render_system_prefix(tok, system_prompt: str) -> str:
-    """'<|im_start|>system\\n...<|im_end|>\\n' exactly as the chat template renders it."""
-    return tok.apply_chat_template([{"role": "system", "content": system_prompt}], tokenize=False,
-                                   add_generation_prompt=False, enable_thinking=SAMPLING["enable_thinking"])
+    """The cacheable prefix shared by every request with this system prompt.
+    Qwen3: the rendered system turn '<|im_start|>system\\n...<|im_end|>\\n' (unchanged from the pilot caches).
+    Other templates (Mistral puts the system text inside the first [INST] block): the longest common
+    string prefix of two renderings with different user prompts, backed off to a clean token boundary."""
+    if is_qwen(tok.name_or_path):
+        return tok.apply_chat_template([{"role": "system", "content": system_prompt}], tokenize=False,
+                                       add_generation_prompt=False, enable_thinking=SAMPLING["enable_thinking"])
+    a, b = _render(tok, system_prompt, "hello one"), _render(tok, system_prompt, "zzz two")
+    i = 0
+    while i < min(len(a), len(b)) and a[i] == b[i]:
+        i += 1
+    while i > 0:
+        pre, suf = a[:i], a[i:]
+        if tok(a, add_special_tokens=False).input_ids == (tok(pre, add_special_tokens=False).input_ids
+                                                           + tok(suf, add_special_tokens=False).input_ids):
+            return pre
+        i -= 1
+    raise ValueError("could not find a clean prefix/suffix token boundary")
 
 
 def render_user_suffix(tok, system_prompt: str, user_prompt: str) -> str:
     """Everything after the system prefix: user turn + assistant generation prompt."""
-    full = tok.apply_chat_template([{"role": "system", "content": system_prompt},
-                                    {"role": "user", "content": user_prompt}], tokenize=False,
-                                   add_generation_prompt=True, enable_thinking=SAMPLING["enable_thinking"])
+    full = _render(tok, system_prompt, user_prompt)
     pre = render_system_prefix(tok, system_prompt)
     assert full.startswith(pre), "chat template prefix mismatch"
     return full[len(pre):]

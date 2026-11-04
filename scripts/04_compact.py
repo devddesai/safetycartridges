@@ -31,12 +31,17 @@ def main():
     ap.add_argument("--max-queries-per-kv-head", type=int, default=50000)
     ap.add_argument("--algo", default="AM-HighestAttnKeys-basic", choices=list(ALGOS))
     ap.add_argument("--tag", required=True)
-    ap.add_argument("--train-rollouts", default=str(rollout_path("spec_in_context", "train")))
+    ap.add_argument("--train-rollouts", default=None)
+    ap.add_argument("--model", default=None, help="HF model (default Qwen/Qwen3-8B)")
+    ap.add_argument("--model-tag", default=None)
     args = ap.parse_args()
+    model_name = args.model or H.MODEL_NAME
+    yarn = 4.0 if H.is_qwen(model_name) else None
+    train_rollouts = args.train_rollouts or str(rollout_path("spec_in_context", "train", args.model_tag or ""))
 
     out = Path("cache/compaction") / f"{args.tag}.pt"
     meta = load_spec_meta()
-    model, tok = H.load_model(yarn_factor=4.0)
+    model, tok = H.load_model(yarn_factor=yarn, model_name=model_name)
     system_prompt = spec_system_prompt()
     prefix_text = H.render_system_prefix(tok, system_prompt)
     indices = H.spec_token_indices(tok, prefix_text, load_spec_text())
@@ -59,7 +64,7 @@ def main():
         parts.append(qs)
         print(f"  self queries: {tuple(qs.shape)}", flush=True)
     if "train" in srcs:
-        recs = [r for r in read_jsonl(args.train_rollouts) if r["response"].strip()]
+        recs = [r for r in read_jsonl(train_rollouts) if r["response"].strip()]
         recs = sorted(recs, key=lambda r: r["prompt_id"])[: args.n_train_convs]
         assert recs, "need condition-2 train rollouts first (scripts/02_generate.py --condition 2 --split train)"
         sfx = [H.render_user_suffix(tok, system_prompt, r["prompt"]) + r["response"] + "<|im_end|>\n" for r in recs]
@@ -98,11 +103,11 @@ def main():
             "prefix_tokens_before": seq_len, "prefix_tokens_after": layers[0][0].shape[2],
             "spec_tokens_before": len(indices), "compression_ratio": len(indices) / args.target_tokens,
             "queries": args.queries, "query_stats": qstats, "spec_hash": meta["sha256_plain_text"],
-            "yarn_factor": 4.0, "time_prefill_s": t_prefill, "time_queries_s": t_queries, "time_compact_s": t_compact,
+            "yarn_factor": yarn, "model": model_name, "time_prefill_s": t_prefill, "time_queries_s": t_queries, "time_compact_s": t_compact,
             "gpu_minutes_total": (t_prefill + t_queries + t_compact) / 60,
             "prefix_kv_gb": H.prefix_num_bytes(layers) / 1e9, "full_kv_gb": sum(k.numel() * 2 + v.numel() * 2 for k, v in kv_tuple) / 1e9,
             "system_prompt": system_prompt}
-    H.save_prefix(out, layers, original_seq_len=seq_len, yarn_factor=4.0, meta=info)
+    H.save_prefix(out, layers, original_seq_len=seq_len, yarn_factor=yarn, meta=info)
     out.with_suffix(".json").write_text(json.dumps({k: v for k, v in info.items() if k != "system_prompt"}, indent=1))
     print(json.dumps({k: v for k, v in info.items() if k not in ("system_prompt", "algo_kwargs")}, indent=1))
 

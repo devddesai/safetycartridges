@@ -27,9 +27,14 @@ def main():
     ap.add_argument("--prompt-set", default="main", choices=["main", "jailbreak"])
     ap.add_argument("--batch-size", type=int, default=None)
     ap.add_argument("--latency-n", type=int, default=8, help="prompts for batch-1 latency measurement")
+    ap.add_argument("--model", default=None, help="HF model (default Qwen/Qwen3-8B; must match the prefix)")
     args = ap.parse_args()
 
     name = CONDITIONS[args.condition]
+    model_name = args.model or H.MODEL_NAME
+    if args.model:
+        from sc import rollouts as R
+        R.MODEL_NAME = args.model
     if args.prompt_set != "main":
         args.tag = (args.tag + "_" if args.tag else "") + "jb"
     tag = args.tag or (Path(args.prefix).stem if args.prefix else "hf")
@@ -44,20 +49,21 @@ def main():
     if args.condition in (3, 4):
         pre = H.load_prefix(args.prefix)
         yarn = pre["yarn_factor"]
-        model, tok = H.load_model(yarn_factor=yarn)
+        assert pre["meta"].get("model", H.MODEL_NAME) == model_name, "prefix was built for a different model"
+        model, tok = H.load_model(yarn_factor=yarn, model_name=model_name)
         layers, orig_len = pre["layers"], pre["original_seq_len"]
         system_prompt = pre["meta"].get("system_prompt") or spec_system_prompt()
         prefix_meta = {k: v for k, v in pre["meta"].items() if k not in ("system_prompt", "train_log")}
     elif args.condition == 2:
-        yarn = 4.0
-        model, tok = H.load_model(yarn_factor=yarn)
+        yarn = 4.0 if H.is_qwen(model_name) else None
+        model, tok = H.load_model(yarn_factor=yarn, model_name=model_name)
         system_prompt = spec_system_prompt()
         cache, orig_len = H.prefill_prefix(model, tok, H.render_system_prefix(tok, system_prompt))
         layers = H.cache_to_prefix_tuple(cache)
         prefix_meta = {"kind": "full_spec_kv"}
     else:
         yarn = None
-        model, tok = H.load_model(yarn_factor=None)
+        model, tok = H.load_model(yarn_factor=None, model_name=model_name)
         system_prompt = NO_SPEC_SYSTEM_PROMPT
         cache, orig_len = H.prefill_prefix(model, tok, H.render_system_prefix(tok, system_prompt))
         layers = H.cache_to_prefix_tuple(cache)
