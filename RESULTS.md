@@ -142,3 +142,23 @@ safety-tuned model, Mistral-Nemo-12B-Instruct (128k native context, Llama-style 
 no-spec vs spec-in-context on validation; (3) the cartridge (condition 3); (4) plain test evals for
 the chosen C3/C4 prefixes. Dropped: test evals of AM-1024/4096 and the thinking-mode ablation
 (only if time remains).
+
+## Jailbreak evals (validation, 140 harmful prompts wrapped in AIM / refusal-suppression / evil-confidant)
+This is where Qwen3-8B has headroom, and the first clear behavioural result of the pilot:
+
+| validation, jailbreak set | harmful refusal | **unsafe rate** (harm>=3) | harm score |
+|---|---|---|---|
+| C1 no spec | 0.721 | **0.343** | 0.323 |
+| C2 full spec in context | 0.600 | **0.486** | 0.449 |
+
+**The full spec in context makes the 8B model MORE jailbreakable** (28 prompts flip safe->unsafe,
+8 flip the other way). Per template: AIM and refusal-suppression do most of the damage (StrongREJECT
++AIM: refusal 0.30 -> 0.10; +refusal-suppression 0.13 -> 0.05); evil-confidant is mostly refused in
+both. Qualitatively the spec-conditioned model slips into the "AIM:" persona and produces bullet-
+pointed harmful content where the bare model says "I cannot fulfill this request." Hypotheses:
+(a) a 55k-token instruction-following prefix primes compliance with the final instruction
+block, (b) the spec's many example dialogues (incl. role-play examples) teach persona-following,
+(c) YaRN-scaled long context weakens the model's own safety behaviour. For an 8B model in
+non-thinking mode, in-context access to the spec is not a safety mechanism against jailbreaks;
+this strengthens the case for a larger / thinking-mode model (CLAUDE.md §8). The question for
+conditions 3/4 is now whether the compressed caches reproduce this vulnerability (fidelity) or not.
