@@ -23,7 +23,7 @@ Numbers and per-step notes: RESULTS.md ("Session 2"). Plan and its 06:25 revisio
    cartridge: unsafe .09 (no artifact .48, full spec in context .31, in-context stack .33, summed-LoRA stack .21),
    with the game policy still mostly followed (.72 vs in-context stack .78, LoRA stack .70). The cartridge stack
    dominates the LoRA stack on both axes.
-5. **Surprise: in thinking mode a 333-token permissive game-studio policy in context protects against jailbreaks as
+5. **Surprise: in thinking mode a ~320-token permissive game-studio policy in context protects against jailbreaks as
    much as the whole 55k-token Model Spec (.29 vs .31).** Reasoning models seem to need "a policy is present", not the
    spec's content. Its LoRA (.45) and cartridge (.41) versions lose that effect. E5 tests whether even an irrelevant
    document does it (see RESULTS.md).

@@ -458,7 +458,7 @@ prompts (.60): the clearest sign that adding LoRAs blurs a strict policy.
 |---|---|---|---|
 | nothing | .48 | .48 | 4 |
 | Model Spec in context (55k tok) | .31 | .36 | 19 |
-| **game policy in context (333 tok, permits violence)** | **.29** | .29 | 1 |
+| **game policy in context (~320 tok, permits violence)** | **.29** | .29 | 1 |
 | spec + game policy in context | .33 | .37 | 18 |
 | spec LoRA | .13 | .18 | 51 (loops) |
 | game LoRA | .45 | .45 | 1 |
