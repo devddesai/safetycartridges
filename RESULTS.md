@@ -376,3 +376,24 @@ E4 (stacking cartridges vs LoRA sums) is the experiment that decides whether car
 now runs right after E3 and before E5. Its evaluation generation is in thinking mode because the E1 result above says
 the spec's safety benefit only exists with reasoning; non-thinking stacks would have had no spec effect to retain.
 Details and reasons: OVERNIGHT_PLAN.md "Revision 06:25". Scripts changed: run_e3.sh, run_e4.sh, run_e5.sh, 17_e4_report.py.
+
+## E1 complete (06:28). Spec effect vs Qwen3 size, validation (results/e1_size_sweep.md, results/plot_e1_size_sweep.png)
+| mode | 0.6B | 1.7B | 4B | 8B | 14B | 32B |
+|---|---|---|---|---|---|---|
+| non-thinking: JB unsafe no spec -> spec | .22->.41 | .74->.26* | .46->.38 | .34->.49 | .27->.45 | **.14->.49** |
+| thinking: JB unsafe no spec -> spec | .66->.36* | .83->.31* | .74->.44 | .46->.29 | .46->.16 | .30->.11 |
+| non-thinking: benign false refusal no spec -> spec | .15->.20 | .22->.25 | .21->.39 | .11->.22 | .09->.28 | .20->.17 |
+(* = substantial verbatim spec copying, see spec-copy columns.)
+1. **Without reasoning, the spec's harm on jailbreaks grows with size** (+14, +18, +34 pts for 8/14/32B): AIM and
+   refusal-suppression personas are adopted instead of refused.
+2. **With reasoning, the spec helps at every size** (-18 to -51 pts). The thinking x spec interaction is the main
+   effect in the whole sweep; size changes the magnitude, not the sign.
+3. Small models (<=1.7B) "benefit" mostly by parroting spec text (31% of 1.7B responses), with large helpfulness loss.
+4. Over-refusal from the spec appears at all sizes up to 14B (+5 to +19 pts); at 32B non-thinking it is flat.
+
+## E3 (in progress) — cache vs weights on identical data (Qwen3-8B)
+cart1k rebuilt (val KL 0.091; session 1 0.088). LoRA r16 (all linear, 43.6M params, 0.087 GB), same 757 targets,
+same top-20 KL, same batch/steps: **best val KL 0.090 in 9.1 train-min (cartridge 0.091 / 9.1 min incl. targets).**
+Equal fit, so any behavioural difference is about where the policy lives.
+Non-thinking jailbreak val unsafe: no spec 0.34, full spec 0.49, **LoRA 0.32**, cartridge 0.26.
+Neither distilled artifact inherits the in-context spec's jailbreak weakness (both were trained on plain prompts only).
