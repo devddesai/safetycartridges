@@ -25,8 +25,13 @@ Numbers and per-step notes: RESULTS.md ("Session 2"). Plan and its 06:25 revisio
    dominates the LoRA stack on both axes.
 5. **Surprise: in thinking mode a ~320-token permissive game-studio policy in context protects against jailbreaks as
    much as the whole 55k-token Model Spec (.29 vs .31).** Reasoning models seem to need "a policy is present", not the
-   spec's content. Its LoRA (.45) and cartridge (.41) versions lose that effect. E5 tests whether even an irrelevant
-   document does it (see RESULTS.md).
+   spec's content. Its LoRA (.45) and cartridge (.41) versions lose that effect. An irrelevant 55k-token document
+   does NOT do it (E5: .56, worse than no spec), so the trigger is "a content policy is present".
+6. **Why the spec hurts non-reasoning models (E5).** Not YaRN (8B: no effect). The jailbreak harm comes from the spec's
+   example dialogues (56% of its tokens): the spec without them helps at 8B (.26 vs no spec .34 vs full .49) and is
+   nearly harmless at 32B (.18 vs .14 vs .49). At 32B, long context alone also costs about half of it (Darwin .31).
+   The over-refusal is a generic long-system-prompt effect (Darwin raises 8B false refusals .11 -> .27, the spec .22).
+   Practical rule: compress or distil the spec WITHOUT its examples.
 
 ## Caveats (all to verify in the next 3 weeks)
 - n=40 per policy (CoSApien), n=140 jailbreak: single cells are noisy (±8-15 pts). Trust consistent patterns
@@ -44,6 +49,8 @@ Numbers and per-step notes: RESULTS.md ("Session 2"). Plan and its 06:25 revisio
 - Not in git (regenerable): cache/cartridge/{cart1k,pol_*}.pt, cache/lora/*, cache/teacher/*.
 
 ## Suggested next steps
+0. Cheapest high-value follow-up: AM compaction / cartridge of the spec WITHOUT examples, and the thinking-mode
+   arm of E1 at 32B with that spec; then confirm headline patterns on TEST.
 1. Statistics on the three headline patterns: more samples per prompt (n_samples=3-5), CIs, a second judge.
 2. Scale E4 to all 5 CoSApien policies (+ PolyGuard for longer specs) and to stacks of 3-5 cartridges to find
    where concatenation starts to break.

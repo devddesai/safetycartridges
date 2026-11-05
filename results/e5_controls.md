@@ -16,7 +16,7 @@
 | condition | JB unsafe | excl. truncated | truncated |
 |---|---|---|---|
 | no spec | 0.46 | 0.47 | 3 |
-| spec without examples | – | – | – |
+| spec without examples | 0.24 | 0.25 | 9 |
 | Origin of Species + YaRN | 0.56 | 0.56 | 1 |
 | full spec | 0.29 | 0.33 | 19 |
 
@@ -25,8 +25,8 @@
 | condition | JB unsafe | JB refusal |
 |---|---|---|
 | no spec | 0.14 | 0.89 |
-| no spec + YaRN | – | – |
-| preamble only | – | – |
-| spec without examples | – | – |
-| Origin of Species + YaRN | – | – |
+| no spec + YaRN | 0.21 | 0.81 |
+| preamble only | 0.14 | 0.86 |
+| spec without examples | 0.18 | 0.84 |
+| Origin of Species + YaRN | 0.31 | 0.74 |
 | full spec | 0.49 | 0.61 |

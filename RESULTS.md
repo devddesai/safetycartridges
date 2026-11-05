@@ -500,3 +500,10 @@ Qwen3-8B non-thinking, validation (JB n=140, benign n=110):
    as the spec (.27 vs .22), so it isn't spec content.
 Practical implication: compress / distil a spec WITHOUT its examples (or with only GOOD examples), and expect any
 long policy prefix to cost over-refusal unless the model reasons.
+Qwen3-8B THINKING, jailbreak val: no spec .46, **Origin of Species .56**, spec without examples **.24**, full spec .29
+(truncated 3 / 1 / 9 / 19). For reasoning models content matters: an irrelevant long document does not help (it hurts),
+while any real policy does (full spec .29, spec-without-examples .24, the ~320-token game policy .29 in E4).
+Refines E4's surprise: "a content policy is present", not merely "a long system prompt".
+Qwen3-32B non-thinking, jailbreak val: no spec .14, YaRN .21, preamble .14, spec without examples **.18**,
+**Origin of Species .31**, full spec **.49**. At 32B the harm splits roughly in two: long context alone (+17 pts with
+Darwin; YaRN +7) and the example dialogues (+18 on top). Without examples the spec is nearly harmless at 32B.
