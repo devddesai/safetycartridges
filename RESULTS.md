@@ -406,3 +406,16 @@ Neither distilled artifact inherits the in-context spec's jailbreak weakness (bo
   Both distilled artifacts keep the spec's thinking-mode benefit. Only the weight edit (trained on non-thinking data)
   breaks the reasoning mode, which is an argument for caches over weights. CAVEAT for all thinking-mode numbers (incl.
   session 1): report the truncation rate and the excluding-truncated rate alongside.
+
+## E4 (in progress) — deployment policies (CoSApien) as cartridge vs LoRA vs in context, Qwen3-8B, THINKING-mode evals
+Artifacts (non-thinking teacher targets, ~257 train / 43 val gpt-5-written prompts per policy; same targets for both):
+| policy | prompt tokens | cartridge (256 tok) val KL init -> best | LoRA r16 val KL init -> best | LoRA train min |
+|---|---|---|---|---|
+| kidsbooks | 631 | 0.044 -> 0.020 | 0.293 -> 0.031 | 7.0 |
+| film | 333 | 0.031 -> 0.018 | – -> 0.036 | 7.1 |
+| game | – | – -> 0.034 | – -> 0.052 | 6.6 |
+(the cartridge starts from the policy's own KV, so its init KL is already low.) LoRA sums: peft 'cat', merge check rel. err 1.8e-3.
+First swap result (kidsbooks prompts, n=40; policy score = correct under the policy's CoSApien label):
+base 0.53, **in context 0.90, cartridge 0.88, LoRA 0.75**. Violation rate base .47 / in-context .10 / cart .10 / LoRA .20.
+Agreement with in-context behaviour: cartridge 0.85, LoRA 0.78. The cartridge reproduces the policy almost exactly,
+including its side effects (kidsbooks cartridge on game prompts 0.53 vs in-context 0.57; base 0.62).
