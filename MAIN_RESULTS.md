@@ -13,6 +13,20 @@ Details: RESULTS.md · Handover: CHECKPOINT_2.md
 
 ---
 
+## TL;DR
+1. **Reasoning is required.** The spec makes models safer only when they think before answering. Without thinking it
+   makes them *easier* to jailbreak, and bigger models are hurt more.
+2. **The examples are the problem.** The spec's example dialogues cause that harm; the spec without them helps.
+   Any very long prompt causes extra over-refusal, even an irrelevant book.
+3. **Cartridge beats LoRA on the same data.** Same training cost and fit, but the cartridge copies the policy more
+   faithfully, and the LoRA breaks the model's reasoning (repetition loops).
+4. **Cartridges stack; LoRAs blur.** Two separately trained cartridges snap together and keep both jobs: they follow
+   the company policy and are the most jailbreak-resistant setup. Summed LoRAs lose the strict policy in conflicts.
+5. **Any policy will do for reasoners.** A short, unrelated company policy protects as well as the whole 55k-token spec;
+   irrelevant text doesn't.
+
+---
+
 ## 1. The spec only helps models that reason (Qwen3, 0.6B–32B)
 | Jailbreak unsafe, no spec → spec | 8B | 14B | 32B |
 |---|---|---|---|
