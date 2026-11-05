@@ -432,3 +432,14 @@ policy's mean and is closer to it per prompt on 3/3 policies. The LoRA is weakes
 parameterisation. Cross-policy cells (e.g. kidsbooks artifact on game prompts: in-context .57, cart .55, LoRA .70)
 show the cartridge also copies the in-context policy's side effects, while the LoRA is "blurrier".
 Spec-only artifacts on policy prompts: in-context spec raises refusals (0.14 -> 0.28); cart .35, LoRA .33.
+### E4 stack complete (09:35): Model Spec + policy (thinking mode, n=40/policy)
+| policy score, alone -> stacked with Model Spec | game | kidsbooks | film | mean |
+|---|---|---|---|---|
+| in context (spec system prompt + policy as developer section) | .80 -> .78 | .90 -> .78 | .82 -> .88 | .84 -> **.81** |
+| cartridges concatenated, spec first (cart1k + pol, no retraining) | .85 -> .72 | .88 -> .82 | .80 -> .82 | .84 -> **.79** |
+| cartridges concatenated, policy first | -> .78 | -> .88 | -> .78 | -> **.81** |
+| LoRAs summed (lora_spec + lora_pol, exact) | .75 -> .70 | .75 -> .65 | .85 -> .75 | .78 -> **.70** |
+Concatenating two independently trained cartridges does not collapse at this scale (2 cartridges): it lands within 0-2 pts
+of stacking the documents in context. Summing LoRAs costs 2x as much (-8 pts) and is the worst stacked method.
+Order matters slightly for cartridges (policy-first .81 vs spec-first .79). Bucket-level stacked scores (exceeds_root
+n=6-7 per policy) are too small to read. Jailbreak retention of the spec inside the stack: section 4 (pending).
