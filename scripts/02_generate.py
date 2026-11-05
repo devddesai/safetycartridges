@@ -26,6 +26,9 @@ def main():
     ap.add_argument("--preamble", default=None, help="spec preamble variant (see sc.spec.PREAMBLES)")
     ap.add_argument("--model", default=None, help="other HF model for a headroom check (no YaRN; tag added)")
     ap.add_argument("--model-tag", default=None)
+    ap.add_argument("--variant", default=None, choices=["yarn_only", "preamble_only", "noexamples", "longdoc"],
+                    help="E5 controls for condition 2: no-spec prompt + YaRN; v2 preamble without spec; spec without its "
+                         "[example] dialogues; length-matched irrelevant document (Origin of Species) + YaRN")
     ap.add_argument("--lora", default=None, help="peft adapter dir (condition 1 system prompt + LoRA); tag gets the adapter name")
     ap.add_argument("--thinking", action="store_true", help="ablation: Qwen3 thinking mode (max 4096 new tokens, thinking sampling)")
     args = ap.parse_args()
@@ -35,6 +38,8 @@ def main():
         from sc import rollouts as R
         R.MODEL_NAME = args.model
         args.tag = (args.tag + "_" if args.tag else "") + (args.model_tag or args.model.split("/")[-1].lower())
+    if args.variant:
+        args.tag = (args.tag + "_" if args.tag else "") + "ctl-" + args.variant
     if args.lora:
         args.tag = (args.tag + "_" if args.tag else "") + Path(args.lora).name
     if args.prompt_set != "main":
@@ -59,6 +64,20 @@ def main():
         system_prompt, spec_hash, yarn = spec_system_prompt(preamble=args.preamble), meta["sha256_plain_text"], 4.0
     else:
         system_prompt, spec_hash, yarn = NO_SPEC_SYSTEM_PROMPT, None, None
+    if args.variant:
+        assert args.condition == 2
+        from sc.spec import PREAMBLES, DEFAULT_PREAMBLE
+        spec_hash = None
+        if args.variant == "yarn_only":
+            system_prompt = NO_SPEC_SYSTEM_PROMPT
+        elif args.variant == "preamble_only":
+            system_prompt = spec_system_prompt(spec_text="", preamble=args.preamble)
+        elif args.variant == "noexamples":
+            system_prompt = spec_system_prompt(spec_text=Path("data/spec/control_spec_noexamples.txt").read_text(), preamble=args.preamble)
+        elif args.variant == "longdoc":
+            system_prompt = ("You are a helpful assistant. For reference, a document is included below; it may or may not "
+                             "be relevant to the user's request.\n\n=== DOCUMENT ===\n"
+                             + Path("data/spec/control_longdoc_origin_of_species.txt").read_text() + "\n=== END DOCUMENT ===")
 
     if args.model and "qwen3" not in args.model.lower():
         yarn = None  # e.g. Mistral-Nemo: 128k native context, no rope scaling needed

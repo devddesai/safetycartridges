@@ -3,7 +3,7 @@
 cd "$(dirname "$0")/.."
 export HF_HOME=/workspace/.hf_home
 PY=/venv/compaction/bin/python
-while ! grep -q "E1 DONE" logs/e1_sweep.log; do sleep 60; done
+while ! grep -q "E5 DONE" logs/e5.log 2>/dev/null; do sleep 60; done
 echo "=== $(date +%T) cartridge (rebuild teacher targets + cart1k)"
 [ -f cache/cartridge/cart1k.pt ] || $PY scripts/05_train_cartridge.py --n-tokens 1024 --steps 300 --batch 16 --tag cart1k
 echo "=== $(date +%T) LoRA"
