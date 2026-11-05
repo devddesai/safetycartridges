@@ -443,3 +443,13 @@ Concatenating two independently trained cartridges does not collapse at this sca
 of stacking the documents in context. Summing LoRAs costs 2x as much (-8 pts) and is the worst stacked method.
 Order matters slightly for cartridges (policy-first .81 vs spec-first .79). Bucket-level stacked scores (exceeds_root
 n=6-7 per policy) are too small to read. Jailbreak retention of the spec inside the stack: section 4 (pending).
+### E4 conflict (09:50): game (permissive) + kidsbooks (strict) loaded together, n=40 each side
+| loaded | game prompts: score under game | kidsbooks prompts: score under kidsbooks |
+|---|---|---|
+| game alone / kidsbooks alone (in context) | .80 / .57 | .47 / .90 |
+| both in context (game first / kids first) | .70 / .72 | .82 / .97 |
+| both as cartridges (game first / kids first) | .70 / .70 | .80 / .78 |
+| both as summed LoRAs | .75 | **.60** |
+With both policies the model compromises; the strict policy mostly holds. Concatenated cartridges reproduce the
+in-context compromise almost exactly and are order-insensitive. Summed LoRAs let the permissive policy win on kids
+prompts (.60): the clearest sign that adding LoRAs blurs a strict policy.
