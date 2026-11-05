@@ -370,3 +370,9 @@ evil-confidant stays 0/46. Without the spec 32B says "I cannot help with that"; 
 Thinking mode: the spec reduces jailbreak-unsafe at every size measured so far (0.6B -0.29 ... 14B 0.46 -> 0.16).
 Hypothesis: the spec's extensive guidance on following user instructions / role-play is applied literally by
 capable non-reasoning models without weighing root-level limits. E5 now also runs the controls at 32B.
+
+### 06:25 — queue reordered and E4 switched to thinking-mode evaluation (Dev's call)
+E4 (stacking cartridges vs LoRA sums) is the experiment that decides whether cartridges have a modularity story, so it
+now runs right after E3 and before E5. Its evaluation generation is in thinking mode because the E1 result above says
+the spec's safety benefit only exists with reasoning; non-thinking stacks would have had no spec effect to retain.
+Details and reasons: OVERNIGHT_PLAN.md "Revision 06:25". Scripts changed: run_e3.sh, run_e4.sh, run_e5.sh, 17_e4_report.py.

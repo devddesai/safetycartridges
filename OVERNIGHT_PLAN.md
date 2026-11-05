@@ -64,3 +64,18 @@ of Qwen3-8B (in memory only) as a model with headroom.
   identical across conditions within the experiment.
 - If something runs >45 min past its box: write down why, take the simplest workaround, move on.
 - Morning: CHECKPOINT_2.md, headline results first.
+
+## Revision 06:25 (Dev, via a second session) — E4 is the priority experiment
+- **Order is now E1 -> E3 -> E4 -> E5.** E4 only needs E3's cart1k + lora_spec_r16, not E5; E5 (controls for why the
+  spec hurts) was moved to the end so the composition result lands first. Waiting loops were restarted with the new
+  wait conditions (run_e3.sh waits on "E1 DONE", run_e5.sh waits on "E4 DONE").
+- **E4 evaluation runs in thinking mode.** E1 and session 1 showed the Model Spec only improves jailbreak safety
+  when the model reasons (8B non-thinking 0.34 -> 0.49 unsafe, thinking 0.46 -> 0.29), so a non-thinking E4 could
+  not measure whether the spec half of a spec+policy stack still works. Distillation targets stay non-thinking
+  (the cart1k recipe, which transferred to thinking generation in session 1). `E4_MODE= E4_SFX=_nothink` re-runs
+  non-thinking if wanted.
+- **Retention table gets same-mode baselines** (jb_base / jb_incontext_spec / jb_cart_spec / jb_lora_spec generated
+  inside E4) instead of mixing session-1 non-thinking numbers with thinking-mode stacks.
+- **E4 now judges itself** (15_e4_judge.py after each stage, resumable) and writes results/e4_report.md at the end;
+  the judge watchers only glob *q3-* files. E3's LoRA eval files are judged explicitly in run_e3.sh for the same reason.
+- Rough timing: E1 done ~06:45, E3 ~07:30, E4 (thinking, ~1300 HF-prefix prompts + ~26 vLLM runs) ~12:30-13:30, E5 after.
