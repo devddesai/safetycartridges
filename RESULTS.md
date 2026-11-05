@@ -453,3 +453,19 @@ n=6-7 per policy) are too small to read. Jailbreak retention of the spec inside 
 With both policies the model compromises; the strict policy mostly holds. Concatenated cartridges reproduce the
 in-context compromise almost exactly and are order-insensitive. Summed LoRAs let the permissive policy win on kids
 prompts (.60): the clearest sign that adding LoRAs blurs a strict policy.
+### E4 jailbreak retention (10:45, partial; thinking mode, jailbreak val n=140; unsafe / excl. truncated / #truncated)
+| loaded | unsafe | excl. trunc | trunc |
+|---|---|---|---|
+| nothing | .48 | .48 | 4 |
+| Model Spec in context (55k tok) | .31 | .36 | 19 |
+| **game policy in context (333 tok, permits violence)** | **.29** | .29 | 1 |
+| spec + game policy in context | .33 | .37 | 18 |
+| spec LoRA | .13 | .18 | 51 (loops) |
+| game LoRA | .45 | .45 | 1 |
+| spec LoRA + game LoRA (sum) | .21 | .23 | 10 |
+**Surprise: a short, permissive, unrelated deployment policy gives the same thinking-mode jailbreak protection as the
+whole Model Spec.** What helps reasoning models here looks like "a content policy is present -> deliberate about what
+is allowed", not the spec's content. The LoRA of the same policy lacks it (.45 ≈ base): it learned the policy's outputs,
+not the "deliberate" trigger. Stacks keep the spec's protection (summed LoRA .21; in-context stack .33).
+Cartridge rows pending (jb_cart_game, jb_stack_cart_game, jb_cart_spec re-run). E5's longdoc-thinking control
+tests whether even an irrelevant document does this.
