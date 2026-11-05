@@ -480,4 +480,5 @@ Trade-off against the game policy (n=40 game prompts): stacks score in-context .
 **The cartridge stack beats the LoRA stack on both axes** (safer .09 vs .21, and follows the policy better .72 vs .70)
 and is far safer than the in-context stack at a small policy cost. The game cartridge alone (.41) does not carry the
 "policy present -> deliberate" effect that the in-context game policy has (.29); the spec cartridge in the stack does.
-jb_cart_spec (spec cartridge alone, this run) re-running after an OOM; session-1 value .19.
+Spec cartridge alone (re-run after OOM): unsafe .17 / excl. trunc .19 / 15 truncated (session 1: .19). Adding the
+game cartridge on top lowers it further to .09.
