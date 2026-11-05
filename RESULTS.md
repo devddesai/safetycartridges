@@ -419,3 +419,16 @@ First swap result (kidsbooks prompts, n=40; policy score = correct under the pol
 base 0.53, **in context 0.90, cartridge 0.88, LoRA 0.75**. Violation rate base .47 / in-context .10 / cart .10 / LoRA .20.
 Agreement with in-context behaviour: cartridge 0.85, LoRA 0.78. The cartridge reproduces the policy almost exactly,
 including its side effects (kidsbooks cartridge on game prompts 0.53 vs in-context 0.57; base 0.62).
+### E4 swap complete (08:41; thinking mode, n=40 per policy)
+| own-policy score | game | kidsbooks | film | mean | behaviour agreement with in-context (game/kids/film) |
+|---|---|---|---|---|---|
+| no policy | 0.62 | 0.53 | 0.78 | 0.64 | 0.72 / 0.70 / 0.75 |
+| in context | 0.80 | 0.90 | 0.82 | 0.84 | - |
+| **cartridge (256 tok)** | 0.85 | 0.88 | 0.80 | **0.84** | **0.88 / 0.85 / 0.88** |
+| LoRA r16 | 0.75 | 0.75 | 0.85 | 0.78 | 0.82 / 0.78 / 0.80 |
+Every artifact scores highest on its own policy's prompts (swap works for both). The cartridge matches the in-context
+policy's mean and is closer to it per prompt on 3/3 policies. The LoRA is weakest at withholding forbidden content
+(kidsbooks disallowed: LoRA 0.59 vs in-context 0.82 / cartridge 0.88). Same training targets, so this is the
+parameterisation. Cross-policy cells (e.g. kidsbooks artifact on game prompts: in-context .57, cart .55, LoRA .70)
+show the cartridge also copies the in-context policy's side effects, while the LoRA is "blurrier".
+Spec-only artifacts on policy prompts: in-context spec raises refusals (0.14 -> 0.28); cart .35, LoRA .33.
