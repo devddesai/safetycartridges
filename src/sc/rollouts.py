@@ -35,7 +35,7 @@ def make_record(prompt_row: dict, split: str, condition_name: str, response: str
         "split": split,
         "condition": condition_name,
         "response": response,
-        "model": MODEL_NAME,
+        "model": globals()["MODEL_NAME"],
         "engine": engine,
         "sampling": dict(SAMPLING),
         "spec_hash": spec_hash,

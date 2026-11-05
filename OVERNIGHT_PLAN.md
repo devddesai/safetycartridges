@@ -1,64 +1,66 @@
-# Overnight plan — session 2 (2026-11-05)
+# Overnight plan — session 2 (2026-11-05), v2
 
-## Where we stand
-Session 1 showed that compressed specs (Attention Matching 25x, cartridge 54x) reproduce the
-in-context spec's behaviour wherever the spec has an effect (Qwen3-8B thinking + jailbreaks;
-Mistral-Nemo-12B). All on validation, n=140 per jailbreak set.
+Goal for tonight (per Dev): **interesting results first, rigor later** (3 weeks remain to verify).
+Validation split only; single sample; no CIs required tonight (but report n). Test stays untouched.
+Rebuild is done (venv, third_party, Qwen3-8B/32B, Nemo). Instance: $3.72/h.
 
-**The weakest point is that nothing rules out "any safety-ish prefix does this."** There is no
-control for (a) the v2 preamble alone, (b) a short spec summary at the same ~2k-token budget as the
-compressed caches, or (c) a compressed *irrelevant* document. If (b) matches the compressed
-caches, compression buys nothing. That control decides the paper's story, so it goes first.
+Four experiments, one per open question. Ordered so the GPU never idles: API-only work
+(generating eval items and policies with gpt-5) runs while the GPU does sweeps.
 
-The instance was recycled: venv, third_party, caches and weights are gone. Phase 0 rebuilds them.
+## E1 — Who can actually use a spec? (size x thinking sweep; ~2.5 GPU-h, starts first)
+Qwen3 {0.6B, 1.7B, 4B, 8B, 14B, 32B} x {thinking, non-thinking} x {no spec, full spec in context},
+on jailbreak-val (140, harmful) + benign-val (110, over-refusal); E2 items appended when ready.
+All in-context, so vLLM only (YaRN x4 for the spec arm, as before).
+Headline plot: spec effect (Δ unsafe, Δ false refusal) vs model size, one line per mode.
+Hypothesis from session 1: the sign flips. Spec hurts small/non-thinking models and helps large/thinking ones.
+Where is the crossover?
+Stop rule: if a 32B thinking run exceeds ~60 min, cut 32B to the jailbreak set only.
 
-## Phases (in order; each has a time box and a stop/pivot rule)
+## E2 — Does the model use the spec's *details* or just its *vibe*? (API work + ~1 GPU-h)
+A "spec-nuance" eval: about 150 prompts, each built by gpt-5 from one specific Model Spec rule where the
+spec prescribes a non-default behaviour (non-safety rules included: formatting, privacy specifics,
+dual-use things it should help with, no lecturing, ...). Each item stores the rule ID and the expected behaviour;
+the judge scores adherence to that one rule (yes/partial/no).
+Conditions at 8B (+32B if time): no spec, full spec, `summary2k` (gpt-5 summary of the spec at the
+compressed-cache budget), `preamble_only`, AM-2k, cartridge-1k (+ size sweep from E1 for free).
+Interesting either way: if AM/cartridge track the full spec on rule-specific items while summary2k
+doesn't, compression preserves *content*. If everything tracks summary2k, the spec acts as a vibe.
+Gate: if the full spec beats no spec by <10 pts at both 8B and 32B, items aren't discriminating.
+Regenerate harder items once (≤30 min), else drop and note it.
 
-### Phase 0 — rebuild + speed (time box 1.5 h)
-- `scripts/setup_instance.sh` (new, idempotent): clones, venv, weights (incl. Qwen3-32B).
-- Regenerate am2048, cart1k, nemo12b_am2048 with the session-1 commands. Sanity check: one 50-prompt
-  run must match session-1 rates within noise.
-- Speed: HF thinking evals took 35-55 min/140 prompts at batch ≤32. Raise the batch to cover the whole
-  set (compressed prefixes are ≤0.4 GB). **Stop rule:** if ≥3x faster, adopt it; if not working in
-  45 min, keep the old engine and drop the lowest-priority evals below.
+## E3 — Cache vs weights on identical data (8B; ~1.5 GPU-h)
+LoRA context distillation (r=16, all linear) on the same 757 C2 train rollouts with the same top-20 KL
+objective and a similar GPU-minute budget as the cartridge; regenerate cart1k + am2048 alongside.
+Evaluate both: jailbreak-val (thinking + non-thinking), benign-val, E2 nuance eval.
+Question: which one carries the spec better, and which generalises better off-distribution (jailbreaks)?
+Stop rule: LoRA not training sensibly within 45 min, so drop it and note why.
 
-### Phase 1 — content controls (THE key question; ~2.5 h)
-Settings where the spec has an effect: (A) Qwen3-8B **thinking**, jailbreak set; (B) Nemo-12B, plain + jailbreak.
-Jailbreak set grows from 140 to 420/split: every harmful prompt is wrapped in all 3 templates (the old
-rotating set stays as a subset). This gives roughly √3 tighter CIs.
-New conditions (configs + rollouts like the others):
-- `preamble_only`: v2 preamble, no spec.
-- `summary2k`: about 2k-token summary of the spec's safety content (written once by gpt-5 from the spec,
-  hash recorded), in context. This is the same budget as AM-2k.
-- `am2048_irrelevant`: AM compaction of a length-matched non-safety document, same recipe. Tests whether
-  "a compressed long prefix" alone does it.
-Validation first, with bootstrap 95% CIs on every rate (add to metrics.py).
-**Decision gate:**
-- Compressed spec beats summary2k/preamble_only by more than the CI → content matters and the thesis
-  holds. Confirm on TEST (C1, C2, C3, C4, summary2k) for settings A and B, then Phase 2.
-- summary2k ≈ compressed ≈ C2 → on these evals the long spec carries no information beyond a summary.
-  Record this as a finding, then **pivot**: build a spec-specific eval where details matter (rules
-  from the spec's non-safety sections and its [example] cases, rephrased and held out), and re-test.
-  Do not run more jailbreak sweeps.
+## E4 — Swap and stack: cartridges vs LoRA adapters (8B; ~2.5 GPU-h)
+Two synthetic deployment policies with checkable, partly conflicting rules (gpt-5 drafts, I edit):
+P_kids (children's tutoring platform) and P_clinic (clinical-professional tool), about 1-2k tokens each,
+plus about 200 targeted prompts per policy (train/val split).
+- Teacher = policy in context (vLLM). Gate: it must move targeted behaviour by ≥30 pts vs no policy.
+- Distil each policy into a 512-token cartridge and a LoRA (same data, same steps).
+- **Swap**: each artifact alone follows its own policy (fidelity vs the teacher).
+- **Stack**: Model-Spec cartridge + policy cartridge (KV concatenation, no retraining) vs
+  LoRA_spec + LoRA_policy (weight sum). Does each still do its job (policy adherence + jailbreak
+  safety from the spec)? Interference = drop vs alone.
+- **Conflict**: P_kids + P_clinic together. Which wins, and is it order-dependent for cartridges?
+Stop rule: if a single-policy cartridge recovers <50% of the teacher effect after one fix (more steps/size),
+report it and finish E4 with LoRA vs in-context only.
 
-### Phase 2 — weights vs cache on identical data (~1.5 h)
-LoRA context distillation (rank 16, attention+MLP) on the same 757 C2 train rollouts and the same KL
-objective as the cartridge, with matched GPU-minutes. Evaluate it like C3 on setting A (thinking jb) and on plain
-validation (over-refusal). Then a 2-policy swap test if time allows. This is the core framing comparison
-(cache vs weights), and the training data already exists.
-**Stop rule:** if LoRA training diverges or takes more than 45 min to get working, document it and move on.
+Literature hook (docs/LITERATURE.md): "Cartridges at Scale" (2606.04557) reports that mixing independently
+trained cartridges collapses, so E4 directly tests that claim for policy cartridges. If our spec+policy stack
+works, it is a counterpoint; if it collapses, LoRA-merge vs cartridge-concat is the comparison to report.
+If the synthetic policies prove weak, swap in CoSApien configs (real deployment policies with test prompts).
 
-### Phase 3 — scale: Qwen3-32B thinking (~3 h, the remaining time)
-C1 vs C2 on jailbreak validation in thinking mode (vLLM, YaRN x4).
-**Gate:** proceed only if the spec lowers unsafe by ≥8 points (headroom + effect). Then AM-2k compaction
-(memory: 64 GB weights + queries; gradient-free) and its eval. If there's no effect, stop 32B and record it.
-Fallback for the remaining time: a self-made partial refusal-direction ablation of Qwen3-8B (in-memory
-only, base weights untouched). Pick α on train so the plain unsafe rate is about 40%, then C1 vs C2.
-Kill it if the spec can't restore refusals at all (ablation too strong to be informative).
+## Stretch (only if all of the above finish)
+AM-2k on Qwen3-32B thinking (the E1 point with the largest spec effect); partial refusal-ablation
+of Qwen3-8B (in memory only) as a model with headroom.
 
-## Global rules for the night
-- No tuning on test. No plain-prompt sweeps on already-safe Qwen3-8B. No more preamble variants.
-- Every rate gets a 95% bootstrap CI. Don't claim differences inside the CI.
-- Commit + push after each phase; RESULTS.md updated; `/workspace` is not a volume.
-- If something has eaten more than 45 min past its box, write down why, take the simplest workaround, move on.
-- Morning handover: CHECKPOINT_2.md (high-level summary first, then details).
+## Rules for the night
+- Validation only; test untouched. Notes in RESULTS.md after each experiment; commit + push.
+- Same judge (gpt-5-mini, judge v1) for the safety evals; E2/E4 use a rule-adherence rubric (judge v2-rule),
+  identical across conditions within the experiment.
+- If something runs >45 min past its box: write down why, take the simplest workaround, move on.
+- Morning: CHECKPOINT_2.md, headline results first.

@@ -40,6 +40,9 @@ def main():
         from sc import rollouts as R
         R.SAMPLING.update({"enable_thinking": True, "max_new_tokens": 4096, "temperature": 0.6, "top_p": 0.95, "top_k": 20})
         args.tag = (args.tag + "_" if args.tag else "") + "thinking"
+    if args.model:
+        from sc import rollouts as R
+        R.MODEL_NAME = args.model  # recorded in each rollout
     out_path = rollout_path(name, args.split, args.tag)
     rows = load_prompts(args.split, limit=args.limit, prompt_set=args.prompt_set)
     done = {r["prompt_id"] for r in read_jsonl(out_path)}
