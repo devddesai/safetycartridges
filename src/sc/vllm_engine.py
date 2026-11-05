@@ -1,3 +1,4 @@
+from pathlib import Path
 """vLLM generation used for conditions 1 and 2 (plain text prompts; prefix caching makes
 the 55k-token spec prefix nearly free after the first request)."""
 import os
@@ -9,12 +10,15 @@ NATIVE_MAX_POS = 32768
 
 
 def build_llm(yarn_factor: float | None = None, gpu_memory_utilization: float = 0.85,
-              max_model_len: int | None = None, seed: int = 0, model: str | None = None):
+              max_model_len: int | None = None, seed: int = 0, model: str | None = None,
+              enable_lora: bool = False, max_lora_rank: int = 64):
     os.environ.setdefault("VLLM_WORKER_MULTIPROC_METHOD", "spawn")
     from vllm import LLM
     model = model or MODEL_NAME
     kwargs = dict(model=model, tokenizer=model, dtype="bfloat16", seed=seed,
                   gpu_memory_utilization=gpu_memory_utilization, enable_prefix_caching=True)
+    if enable_lora:
+        kwargs.update(enable_lora=True, max_lora_rank=max_lora_rank, max_loras=4)
     if yarn_factor:
         kwargs["max_model_len"] = max_model_len or int(NATIVE_MAX_POS * yarn_factor)
         kwargs["hf_overrides"] = {"rope_scaling": {"rope_type": "yarn", "factor": float(yarn_factor),
@@ -31,7 +35,8 @@ def sampling_params(n_seed_offset: int = 0):
                           seed=SAMPLING["seed"] + n_seed_offset)
 
 
-def chat_generate(llm, system_prompt: str | None, user_prompts: list[str], warmup: bool = True):
+def chat_generate(llm, system_prompt: str | None, user_prompts: list[str], warmup: bool = True, lora_path: str | None = None,
+                  extra_messages: list | None = None):
     """Returns list of dicts {text, finish_reason, n_output_tokens, n_prompt_tokens} and wall time."""
     tpl_kwargs = {"enable_thinking": SAMPLING["enable_thinking"]}
 
@@ -39,6 +44,7 @@ def chat_generate(llm, system_prompt: str | None, user_prompts: list[str], warmu
         m = []
         if system_prompt:
             m.append({"role": "system", "content": system_prompt})
+        m.extend(extra_messages or [])
         m.append({"role": "user", "content": u})
         return m
 
@@ -48,9 +54,13 @@ def chat_generate(llm, system_prompt: str | None, user_prompts: list[str], warmu
         from vllm import SamplingParams
         llm.chat([msgs("Hi.")], SamplingParams(max_tokens=1, temperature=0), use_tqdm=False,
                  chat_template_kwargs=tpl_kwargs)
+    lora = None
+    if lora_path:
+        from vllm.lora.request import LoRARequest
+        lora = LoRARequest(Path(lora_path).name, 1, str(Path(lora_path).resolve()))
     t0 = time.time()
     outs = llm.chat([msgs(u) for u in user_prompts], sampling_params(), use_tqdm=True,
-                    chat_template_kwargs=tpl_kwargs)
+                    chat_template_kwargs=tpl_kwargs, lora_request=lora)
     wall = time.time() - t0
     res = []
     for o in outs:

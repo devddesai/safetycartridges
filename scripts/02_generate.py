@@ -26,6 +26,7 @@ def main():
     ap.add_argument("--preamble", default=None, help="spec preamble variant (see sc.spec.PREAMBLES)")
     ap.add_argument("--model", default=None, help="other HF model for a headroom check (no YaRN; tag added)")
     ap.add_argument("--model-tag", default=None)
+    ap.add_argument("--lora", default=None, help="peft adapter dir (condition 1 system prompt + LoRA); tag gets the adapter name")
     ap.add_argument("--thinking", action="store_true", help="ablation: Qwen3 thinking mode (max 4096 new tokens, thinking sampling)")
     args = ap.parse_args()
 
@@ -34,6 +35,8 @@ def main():
         from sc import rollouts as R
         R.MODEL_NAME = args.model
         args.tag = (args.tag + "_" if args.tag else "") + (args.model_tag or args.model.split("/")[-1].lower())
+    if args.lora:
+        args.tag = (args.tag + "_" if args.tag else "") + Path(args.lora).name
     if args.prompt_set != "main":
         args.tag = (args.tag + "_" if args.tag else "") + "jb"
     if args.thinking:
@@ -61,9 +64,10 @@ def main():
         yarn = None  # e.g. Mistral-Nemo: 128k native context, no rope scaling needed
     other_model = bool(args.model and "qwen3" not in args.model.lower())
     llm = build_llm(yarn_factor=yarn, gpu_memory_utilization=args.gpu_mem, model=args.model,
-                    max_model_len=65536 if other_model else None)
+                    max_model_len=65536 if other_model else (16384 if args.lora else None),
+                    enable_lora=bool(args.lora))
     torch.cuda.reset_peak_memory_stats()
-    outs, wall = chat_generate(llm, system_prompt, [r["prompt"] for r in todo])
+    outs, wall = chat_generate(llm, system_prompt, [r["prompt"] for r in todo], lora_path=args.lora)
     recs = read_jsonl(out_path)
     for r, o in zip(todo, outs):
         text = o["text"].split("</think>")[-1].strip() if args.thinking else o["text"]
