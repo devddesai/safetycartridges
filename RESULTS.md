@@ -361,3 +361,12 @@ Early (0.6B, 1.7B done; 8B from session 1):
   (0.74 -> 0.57; 0.6B: 0.63 -> 0.38). Their "safety" is degeneration plus parroting a spec example.
 - New metric `spec_copy_rate` (share of responses with >=2 spec 8-grams, excluding 8-grams the no-spec 8B
   model also produces) separates parroting from use.
+
+### E1 update (06:10) — inverse scaling of the spec's harm in non-thinking mode
+Jailbreak-unsafe, no spec -> full spec (non-thinking): 4B 0.46 -> 0.38, 8B 0.34 -> 0.49, 14B 0.27 -> 0.45, **32B 0.14 -> 0.49**.
+The bigger the model, the more the in-context spec HURTS jailbreak robustness without reasoning. At 32B, 49 prompts flip
+safe -> unsafe and 1 flips back; it is the AIM role-play template (spec: 38/47 unsafe) and refusal suppression (30/47);
+evil-confidant stays 0/46. Without the spec 32B says "I cannot help with that"; with it, it adopts the amoral persona.
+Thinking mode: the spec reduces jailbreak-unsafe at every size measured so far (0.6B -0.29 ... 14B 0.46 -> 0.16).
+Hypothesis: the spec's extensive guidance on following user instructions / role-play is applied literally by
+capable non-reasoning models without weighing root-level limits. E5 now also runs the controls at 32B.
