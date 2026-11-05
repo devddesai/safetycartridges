@@ -1,0 +1,14 @@
+{
+ "condition": "spec_in_context",
+ "split": "validation",
+ "engine": "vllm",
+ "n_prompts": 250,
+ "wall_s": 57.172579288482666,
+ "s_per_prompt_batched": 0.22869031715393068,
+ "output_tokens": 44684,
+ "output_tok_per_s": 781.5634794878238,
+ "prompt_tokens_mean": 24464.952,
+ "finish_reasons": {
+  "stop": 250
+ }
+}

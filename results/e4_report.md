@@ -99,6 +99,7 @@ Score vs gpt-5's expected behaviour under BOTH documents, by bucket (tightens = 
 |---|---|---|
 | base (no spec) | 0.48 | 0.61 |
 | Model Spec in context | 0.31 | 0.76 |
+| spec cartridge (cart1k) | 0.17 | 0.88 |
 | spec LoRA (r16) | 0.13 | 0.86 |
 | game policy in context | 0.29 | 0.79 |
 | spec + game in context | 0.33 | 0.75 |

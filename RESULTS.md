@@ -482,3 +482,21 @@ and is far safer than the in-context stack at a small policy cost. The game cart
 "policy present -> deliberate" effect that the in-context game policy has (.29); the spec cartridge in the stack does.
 Spec cartridge alone (re-run after OOM): unsafe .17 / excl. trunc .19 / 15 truncated (session 1: .19). Adding the
 game cartridge on top lowers it further to .09.
+
+## E5 — why does the in-context spec hurt? (12:20; results/e5_controls.md, scripts/18_e5_report.py)
+Qwen3-8B non-thinking, validation (JB n=140, benign n=110):
+| condition | JB unsafe | benign false refusal | benign any refusal | benign helpful |
+|---|---|---|---|---|
+| no spec | .34 | .11 | .33 | .89 |
+| no spec + YaRN x4 | .36 | .11 | .30 | .90 |
+| v2 preamble only | .29 | .20 | .28 | .82 |
+| **spec without its [example] dialogues (24k tok)** | **.26** | .30 | .47 | .74 |
+| Origin of Species, 55k tok + YaRN | .35 | **.27** | .43 | .74 |
+| full spec (55k tok) | **.49** | .22 | .49 | .80 |
+1. **YaRN is not the cause** (no change on either axis). The session-1 confound is ruled out.
+2. **The jailbreak harm comes from the spec's example dialogues** (56% of its tokens). Without them the same spec
+   helps (.26 < .34) instead of hurting (.49): the model imitates the role-play/persona examples in non-thinking mode.
+3. **The over-refusal is a generic long-system-prompt effect.** 55k tokens of Darwin raise false refusals about as much
+   as the spec (.27 vs .22), so it isn't spec content.
+Practical implication: compress / distil a spec WITHOUT its examples (or with only GOOD examples), and expect any
+long policy prefix to cost over-refusal unless the model reasons.
