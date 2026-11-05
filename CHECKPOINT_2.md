@@ -19,8 +19,14 @@ Numbers and per-step notes: RESULTS.md ("Session 2"). Plan and its 06:25 revisio
    conflicting policies loaded, concatenated cartridges reproduce the in-context compromise almost exactly and are
    order-insensitive, while summed LoRAs let the permissive policy override the strict one (.60 vs .80).
    (Contradicts, at n=2 cartridges, the "mixing cartridges collapses" claim of arXiv 2606.04557.)
-4. **Jailbreak retention inside stacks** and **E5 (why the spec hurts: YaRN / preamble / examples / length
-   controls)**: see RESULTS.md (filled in at the end of the night).
+4. **Stacked cartridges keep (and add) safety (E4 retention, thinking jailbreaks).** Spec cartridge + game-policy
+   cartridge: unsafe .09 (no artifact .48, full spec in context .31, in-context stack .33, summed-LoRA stack .21),
+   with the game policy still mostly followed (.72 vs in-context stack .78, LoRA stack .70). The cartridge stack
+   dominates the LoRA stack on both axes.
+5. **Surprise: in thinking mode a 333-token permissive game-studio policy in context protects against jailbreaks as
+   much as the whole 55k-token Model Spec (.29 vs .31).** Reasoning models seem to need "a policy is present", not the
+   spec's content. Its LoRA (.45) and cartridge (.41) versions lose that effect. E5 tests whether even an irrelevant
+   document does it (see RESULTS.md).
 
 ## Caveats (all to verify in the next 3 weeks)
 - n=40 per policy (CoSApien), n=140 jailbreak: single cells are noisy (±8-15 pts). Trust consistent patterns

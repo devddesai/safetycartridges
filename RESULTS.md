@@ -469,3 +469,15 @@ is allowed", not the spec's content. The LoRA of the same policy lacks it (.45 â
 not the "deliberate" trigger. Stacks keep the spec's protection (summed LoRA .21; in-context stack .33).
 Cartridge rows pending (jb_cart_game, jb_stack_cart_game, jb_cart_spec re-run). E5's longdoc-thinking control
 tests whether even an irrelevant document does this.
+### E4 retention complete (11:30): cartridge rows
+| loaded (thinking, jailbreak val n=140) | unsafe | excl. trunc | trunc |
+|---|---|---|---|
+| game cartridge alone | .41 | .42 | 4 |
+| **spec cartridge + game cartridge (concatenated)** | **.09** | .09 | 5 |
+| (from above) in-context stack / summed-LoRA stack | .33 / .21 | .37 / .23 | 18 / 10 |
+The stacked cartridges are coherent and refuse properly (108 full refusals, 0 empty), not degenerate.
+Trade-off against the game policy (n=40 game prompts): stacks score in-context .78, **cartridges .72**, LoRA sum .70.
+**The cartridge stack beats the LoRA stack on both axes** (safer .09 vs .21, and follows the policy better .72 vs .70)
+and is far safer than the in-context stack at a small policy cost. The game cartridge alone (.41) does not carry the
+"policy present -> deliberate" effect that the in-context game policy has (.29); the spec cartridge in the stack does.
+jb_cart_spec (spec cartridge alone, this run) re-running after an OOM; session-1 value .19.
