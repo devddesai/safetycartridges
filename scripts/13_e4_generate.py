@@ -57,7 +57,7 @@ def main():
         orig = sum(p["layers"][0][0].shape[2] for p in parts)
         model, tok = H.load_model(yarn_factor=None)
         sfx = [H.render_user_suffix(tok, NO_SPEC_SYSTEM_PROMPT, p) for p in prompts]
-        bs = 64 if not args.thinking else 96
+        bs = 64 if not args.thinking else 48
         outs = H.generate_with_prefix(model, tok, layers, orig, sfx, batch_size=bs)
         texts = [o["text"] for o in outs]
         meta = {"engine": "hf-prefix", "prefixes": args.prefixes, "prefix_tokens": orig}
