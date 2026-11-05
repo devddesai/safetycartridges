@@ -397,3 +397,12 @@ same top-20 KL, same batch/steps: **best val KL 0.090 in 9.1 train-min (cartridg
 Equal fit, so any behavioural difference is about where the policy lives.
 Non-thinking jailbreak val unsafe: no spec 0.34, full spec 0.49, **LoRA 0.32**, cartridge 0.26.
 Neither distilled artifact inherits the in-context spec's jailbreak weakness (both were trained on plain prompts only).
+- Plain validation: LoRA false refusal 0.273 / any refusal 0.491 / helpfulness 0.785, i.e. the same as the cartridge
+  (0.273 / 0.509 / 0.771) and close to the full spec (0.218 / 0.491 / 0.796). Both distil the teacher equally on-distribution.
+- **Thinking-mode jailbreak val: the LoRA damages reasoning mode.** 47/140 responses hit the 4096-token cap, 46 of them
+  in a repetition loop inside <think> ("I'm sorry, but I can't help with that... 😊" repeated); cartridge 19, full spec 19,
+  no spec 3. Truncated responses count as "safe", so headline unsafe rates flatter the loopers:
+  unsafe (all / excluding truncated): no spec .46/.47, full spec .29/.33, cartridge .19/.22, **LoRA .16/.23**.
+  Both distilled artifacts keep the spec's thinking-mode benefit. Only the weight edit (trained on non-thinking data)
+  breaks the reasoning mode, which is an argument for caches over weights. CAVEAT for all thinking-mode numbers (incl.
+  session 1): report the truncation rate and the excluding-truncated rate alongside.
