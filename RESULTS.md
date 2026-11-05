@@ -1,5 +1,7 @@
 # RESULTS.md — Safety Spec Cartridges pilot (Qwen3-8B, single H200)
 
+> **Short summary: see MAIN_RESULTS.md.** This file is the full running log.
+
 Running log of what was done, the numbers, problems, and decisions. Updated after every milestone.
 
 ## Milestone 1 — environment, model, spec (done)
