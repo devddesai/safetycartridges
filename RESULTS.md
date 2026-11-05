@@ -347,3 +347,17 @@ trained from non-thinking condition-2 data, yet transfer to thinking-mode genera
   while the cartridge partially corrects it; the methods preserve different things.
 - Costs: 2-3 GPU-minutes (Attention Matching, no training) or ~9 GPU-minutes (cartridge) one-time;
   single-stream decoding 3.6x faster and half the memory of the in-context spec.
+
+---
+# Session 2 (2026-11-05, overnight). Plan: OVERNIGHT_PLAN.md. Exploratory: validation only, single sample.
+Instance had been recycled; rebuilt with `scripts/setup_instance.sh` (~10 min).
+
+## E1 (in progress) — spec effect vs Qwen3 size. Table: results/e1_size_sweep.md (`scripts/16_e1_report.py`)
+Early (0.6B, 1.7B done; 8B from session 1):
+- The spec cuts jailbreak-unsafe a lot for tiny models (1.7B: 0.74 -> 0.26 non-thinking, 0.83 -> 0.31 thinking),
+  but it isn't reasoning: **the small models copy the spec**. 31% of 1.7B non-thinking jailbreak responses contain
+  multiple verbatim 8-word runs from the spec (8B: 0%). They emit a canned self-harm crisis reply to unrelated
+  requests, `<assistant>`/`[AIM]` example formatting, and leak `</think>`. Helpfulness on benign prompts drops
+  (0.74 -> 0.57; 0.6B: 0.63 -> 0.38). Their "safety" is degeneration plus parroting a spec example.
+- New metric `spec_copy_rate` (share of responses with >=2 spec 8-grams, excluding 8-grams the no-spec 8B
+  model also produces) separates parroting from use.
